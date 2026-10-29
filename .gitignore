@@ -1,0 +1,24 @@
+# build output
+bin/
+obj/
+artifacts/
+*.nupkg
+*.snupkg
+
+# test results, logs, traces
+TestResults/
+*.trx
+*.binlog
+logs/
+*.log
+
+# IDE / personal settings
+.vs/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# OS junk
+Thumbs.db
+Desktop.ini

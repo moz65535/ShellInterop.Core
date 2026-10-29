@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Required only by the LibraryImport source generator. No hand-written unsafe code. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Version>0.1.0</Version>
+    <!-- Intentionally NO UseWPF / UseWindowsForms / PackageReference: Core depends on the BCL and Windows COM only. -->
+  </PropertyGroup>
+
+  <!-- NuGet metadata (local development package only). RepositoryUrl, PackageProjectUrl, the release Version and signing
+       are intentionally NOT set: they are undecided (see README.md). Local packs pass -p:Version=0.1.0-local.N. -->
+  <PropertyGroup>
+    <PackageId>WindowsShell.Core</PackageId>
+    <Product>WindowsShell.Core</Product>
+    <Authors>moz</Authors>
+    <Copyright>Copyright (c) 2026 moz</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Description>Windows-only .NET library for the Jump List Tasks category (ICustomDestinationList), AppUserModelID helpers and the STA worker boundary. Independent of any UI framework. Pre-release PoC.</Description>
+    <PackageTags>jumplist;jump-list;taskbar;windows;shell;appusermodelid</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Package-specific README (the repository README links to files that do not exist inside the package). -->
+    <None Include="..\..\docs\PACKAGE-README.md" Pack="true" PackagePath="README.md" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="WindowsShell.Core.Tests" />
+  </ItemGroup>
+
+</Project>
