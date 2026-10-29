@@ -186,4 +186,3 @@ internal static class ShellLinkTaskBuilder
         return target.Collection.AddObject(obj!);
     }
 }
-
