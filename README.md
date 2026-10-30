@@ -9,7 +9,6 @@ WinForms or console applications.
 > Only one real-Shell operation has been verified so far (see [Verification status](#verification-status)).
 
 ShellInterop.Core is an unofficial, independently developed library. It is not developed, provided or endorsed by Microsoft.
-This library was developed with AI assistance.
 
 ## Requirements
 
@@ -125,6 +124,16 @@ The tests use a fake Shell and never write a real Jump List.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Structure of the library (Japanese) |
 | [docs/ERROR-MODEL.md](docs/ERROR-MODEL.md) | Result and error model (Japanese) |
 | [docs/API-CONTRACT-REVIEW.md](docs/API-CONTRACT-REVIEW.md) | How the COM declarations were checked against the Windows SDK headers (Japanese) |
+
+## Development and AI Assistance
+
+ShellInterop.Core was developed and is maintained by moz, with substantial assistance from OpenAI ChatGPT, OpenAI Codex,
+and Anthropic Claude Code.
+
+AI assistance included architecture and API design discussions, implementation planning, code generation, debugging,
+testing, and code review.
+
+Final project decisions and responsibility remain with the maintainer.
 
 ## License
 
