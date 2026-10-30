@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace WindowsShell.Core.Interop;
+namespace ShellInterop.Core.Interop;
 
 // Every GUID and every vtable slot below was checked against the Windows SDK 10.0.26100.0 headers
 // (ShObjIdl_core.h, ObjectArray.h, propsys.h, propkey.h). See docs/API-CONTRACT-REVIEW.md.

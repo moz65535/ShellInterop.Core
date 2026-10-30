@@ -1,4 +1,4 @@
-# WindowsShell.Core
+# ShellInterop.Core
 
 A Windows-only, UI-framework-independent .NET library that edits the Jump List **Tasks** category through the
 documented Windows Shell COM API (`ICustomDestinationList`). It has no package references and does not depend on
@@ -8,7 +8,7 @@ WinForms or console applications.
 > **Status: pre-release (version 0.1.0-preview.1). Not published and not production ready.**
 > Only one real-Shell operation has been verified so far (see [Verification status](#verification-status)).
 
-WindowsShell.Core is an unofficial, independently developed library. It is not developed, provided or endorsed by Microsoft.
+ShellInterop.Core is an unofficial, independently developed library. It is not developed, provided or endorsed by Microsoft.
 
 ## Requirements
 
@@ -21,8 +21,8 @@ applications multi-target `net10.0;net10.0-windows` and reference the library on
 ## Quick start
 
 ```csharp
-using WindowsShell.Core;
-using WindowsShell.Core.JumpLists;
+using ShellInterop.Core;
+using ShellInterop.Core.JumpLists;
 
 // 1. First thing in Main, before any window: set the process AppUserModelID (throws ArgumentException if invalid).
 int hr = ProcessAppIdentity.Set("YourCompany.YourApp");   // hr < 0: Shell call failed, skip the Jump List
@@ -67,13 +67,13 @@ the worker.
 The package is not published on NuGet.org. To try it, pack it yourself and use a local feed:
 
 ```
-dotnet pack src/WindowsShell.Core -c Release -p:Version=0.1.0-local.1 -o <local feed folder>
+dotnet pack src/ShellInterop.Core -c Release -p:Version=0.1.0-local.1 -o <local feed folder>
 ```
 
 Then reference it, for example from a Windows-only project:
 
 ```xml
-<PackageReference Include="WindowsShell.Core" Version="0.1.0-local.1" />
+<PackageReference Include="ShellInterop.Core" Version="0.1.0-local.1" />
 ```
 
 For a multi-targeted project, add the reference conditionally on the Windows target framework.
@@ -82,7 +82,7 @@ For a multi-targeted project, add the reference conditionally on the Windows tar
 
 | Evidence | Result |
 |---|---|
-| Unit tests (fake Shell, in-memory COM objects, SDK-header cross-checks) | Included in `tests/WindowsShell.Core.Tests`. They never touch a Jump List. A pass is not a real-Shell result |
+| Unit tests (fake Shell, in-memory COM objects, SDK-header cross-checks) | Included in `tests/ShellInterop.Core.Tests`. They never touch a Jump List. A pass is not a real-Shell result |
 | Real Shell, first test: one `ApplyAsync` of two Tasks, seen on the taskbar of a Windows guest VM | PASS (single operation) |
 
 **Not verified against the real Shell yet:** clearing with an empty Tasks list, `DeleteListAsync`, replacing one Tasks set
@@ -96,7 +96,7 @@ COM lifetime handling, apply/delete results and error reporting.
 
 Not implemented: categories, Recent/Frequent, separators, any UI, settings screens, app-specific IPC, update services,
 installers, taskbar pin management. Possible future Shell features (DWM thumbnails, DWM Peek, other taskbar Win32 work) are
-not implemented; the name `WindowsShell.Core` is kept for that reason.
+not implemented; the name `ShellInterop.Core` is not tied to the Jump List feature for that reason.
 
 ### OS support
 
@@ -109,9 +109,9 @@ not implemented; the name `WindowsShell.Core` is kept for that reason.
 ## Build and test
 
 ```
-dotnet restore WindowsShell.Core.sln
-dotnet build WindowsShell.Core.sln -c Release
-dotnet test WindowsShell.Core.sln -c Release
+dotnet restore ShellInterop.Core.sln
+dotnet build ShellInterop.Core.sln -c Release
+dotnet test ShellInterop.Core.sln -c Release
 ```
 
 The tests use a fake Shell and never write a real Jump List.

@@ -1,8 +1,8 @@
 using System.Reflection;
-using WindowsShell.Core.JumpLists;
-using WindowsShell.Core.JumpLists.Native;
+using ShellInterop.Core.JumpLists;
+using ShellInterop.Core.JumpLists.Native;
 
-namespace WindowsShell.Core.Tests;
+namespace ShellInterop.Core.Tests;
 
 public enum InjectionPoint
 {

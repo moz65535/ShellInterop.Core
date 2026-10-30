@@ -1,4 +1,4 @@
-namespace WindowsShell.Core.JumpLists;
+namespace ShellInterop.Core.JumpLists;
 
 public sealed record JumpListLogEntry(
     DateTimeOffset Timestamp,

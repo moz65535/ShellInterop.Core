@@ -1,6 +1,6 @@
-using WindowsShell.Core.JumpLists;
+using ShellInterop.Core.JumpLists;
 
-namespace WindowsShell.Core.Tests;
+namespace ShellInterop.Core.Tests;
 
 /// <summary>A controllable "COM operation": the fake blocks inside it until the test releases it. All waits are bounded.</summary>
 internal sealed class OperationGate

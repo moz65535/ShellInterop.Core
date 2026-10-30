@@ -1,4 +1,4 @@
-# WindowsShell.Core
+# ShellInterop.Core
 
 A small, **Windows-only**, UI-framework-independent .NET library that manages the **Jump List Tasks** category of a
 taskbar button through the documented Windows Shell COM API (`ICustomDestinationList`). It works from Avalonia, WPF,
@@ -6,7 +6,7 @@ WinForms or a plain console/background process: it has no UI dependency and **no
 
 > **Pre-release / PoC (version 0.1.0-preview.1).** Not production ready. See "Status and limits" below.
 
-WindowsShell.Core is an unofficial, independently developed library. It is not developed, provided or endorsed by Microsoft.
+ShellInterop.Core is an unofficial, independently developed library. It is not developed, provided or endorsed by Microsoft.
 
 ## Target framework
 
@@ -15,7 +15,7 @@ apps multi-target `net10.0;net10.0-windows` and reference the package only from 
 
 ```xml
 <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-  <PackageReference Include="WindowsShell.Core" Version="..." />
+  <PackageReference Include="ShellInterop.Core" Version="..." />
 </ItemGroup>
 ```
 
@@ -30,8 +30,8 @@ apps multi-target `net10.0;net10.0-windows` and reference the package only from 
 5. On exit, `await publisher.ShutdownAsync(timeout)` and call `Dispose()` only when it completed.
 
 ```csharp
-using WindowsShell.Core;
-using WindowsShell.Core.JumpLists;
+using ShellInterop.Core;
+using ShellInterop.Core.JumpLists;
 
 ProcessAppIdentity.Set("YourCompany.YourApp");
 var publisher = new JumpListPublisher();

@@ -1,8 +1,8 @@
-using WindowsShell.Core.Interop;
-using WindowsShell.Core.JumpLists;
-using WindowsShell.Core.JumpLists.Native;
+using ShellInterop.Core.Interop;
+using ShellInterop.Core.JumpLists;
+using ShellInterop.Core.JumpLists.Native;
 
-namespace WindowsShell.Core;
+namespace ShellInterop.Core;
 
 /// <summary>Process-level explicit AppUserModelID. Must be set during startup, before any window or Jump List work.</summary>
 public static class ProcessAppIdentity

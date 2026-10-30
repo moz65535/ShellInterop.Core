@@ -1,6 +1,6 @@
-using WindowsShell.Core.JumpLists;
+using ShellInterop.Core.JumpLists;
 
-namespace WindowsShell.Core.Tests;
+namespace ShellInterop.Core.Tests;
 
 public class ValidationTests
 {

@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace WindowsShell.Core.Interop;
+namespace ShellInterop.Core.Interop;
 
 internal static partial class NativeMethods
 {

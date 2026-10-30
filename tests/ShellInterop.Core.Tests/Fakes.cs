@@ -1,7 +1,7 @@
-using WindowsShell.Core.JumpLists;
-using WindowsShell.Core.JumpLists.Native;
+using ShellInterop.Core.JumpLists;
+using ShellInterop.Core.JumpLists.Native;
 
-namespace WindowsShell.Core.Tests;
+namespace ShellInterop.Core.Tests;
 
 internal static class Hresults
 {
@@ -271,7 +271,7 @@ internal sealed class ListLog : IJumpListLogSink
 
 internal static class Samples
 {
-    public const string AppId = "WindowsShell.Core.Poc.TestHost";
+    public const string AppId = "ShellInterop.Core.Poc.TestHost";
     public const string Exe = @"C:\PocTest\host.exe";
 
     public static JumpTaskDefinition Task(string id) => new()

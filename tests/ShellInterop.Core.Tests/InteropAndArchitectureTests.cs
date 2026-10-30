@@ -3,11 +3,11 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using WindowsShell.Core.Interop;
-using WindowsShell.Core.JumpLists;
-using WindowsShell.Core.JumpLists.Native;
+using ShellInterop.Core.Interop;
+using ShellInterop.Core.JumpLists;
+using ShellInterop.Core.JumpLists.Native;
 
-namespace WindowsShell.Core.Tests;
+namespace ShellInterop.Core.Tests;
 
 public class InteropAndArchitectureTests
 {
@@ -209,7 +209,7 @@ public class InteropAndArchitectureTests
     {
         _ = ProcessAppIdentity.TryGet(); // read-only
         Assert.Throws<ArgumentException>(() => ProcessAppIdentity.Set("Has Space.X"));
-        Assert.Throws<ArgumentException>(() => ProcessAppIdentity.Set("Other.App", id => id.StartsWith("WindowsShell.Core.Poc.", StringComparison.Ordinal)));
+        Assert.Throws<ArgumentException>(() => ProcessAppIdentity.Set("Other.App", id => id.StartsWith("ShellInterop.Core.Poc.", StringComparison.Ordinal)));
         Assert.Throws<ArgumentException>(() => ProcessAppIdentity.Set(""));
     }
 
@@ -231,7 +231,7 @@ public class InteropAndArchitectureTests
         string? csproj = null;
         while (dir is not null && csproj is null)
         {
-            string candidate = Path.Combine(dir, "src", "WindowsShell.Core", "WindowsShell.Core.csproj");
+            string candidate = Path.Combine(dir, "src", "ShellInterop.Core", "ShellInterop.Core.csproj");
             csproj = File.Exists(candidate) ? candidate : null;
             dir = Path.GetDirectoryName(dir);
         }
@@ -250,7 +250,9 @@ public class InteropAndArchitectureTests
     public void T19_PublicApi_ExposesNoComTypes()
     {
         var publicTypes = typeof(JumpListPublisher).Assembly.GetExportedTypes();
-        Assert.DoesNotContain(publicTypes, t => t.IsImport || t.Namespace?.Contains("Interop") == true || t.Namespace?.Contains("Native") == true);
+        Assert.DoesNotContain(publicTypes, t => t.IsImport
+            || t.Namespace?.Split('.').Contains("Interop") == true
+            || t.Namespace?.Split('.').Contains("Native") == true);
         Assert.Contains(typeof(IJumpListPublisher), publicTypes);
         foreach (MethodInfo m in typeof(IJumpListPublisher).GetMethods())
         {

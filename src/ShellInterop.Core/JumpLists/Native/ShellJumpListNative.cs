@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using WindowsShell.Core.Interop;
+using ShellInterop.Core.Interop;
 
-namespace WindowsShell.Core.JumpLists.Native;
+namespace ShellInterop.Core.JumpLists.Native;
 
 /// <summary>Real ICustomDestinationList wrapper. Owns the list RCW and the removed-destinations array from BeginList.</summary>
 internal sealed class ShellJumpListNative : IJumpListNative

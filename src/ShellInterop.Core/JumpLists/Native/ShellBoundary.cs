@@ -1,6 +1,6 @@
-using WindowsShell.Core.Interop;
+using ShellInterop.Core.Interop;
 
-namespace WindowsShell.Core.JumpLists.Native;
+namespace ShellInterop.Core.JumpLists.Native;
 
 /// <summary>Handle for the shell-link collection built for AddUserTasks. Dispose releases every COM reference exactly once.</summary>
 internal interface ITaskCollectionHandle : IDisposable

@@ -1,4 +1,4 @@
-namespace WindowsShell.Core.JumpLists;
+namespace ShellInterop.Core.JumpLists;
 
 /// <summary>
 /// Pure input validation. Limits marked "local" are conservative caps chosen here, not Shell-documented values.

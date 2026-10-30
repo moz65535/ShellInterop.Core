@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using WindowsShell.Core.Interop;
-using WindowsShell.Core.JumpLists.Native;
+using ShellInterop.Core.Interop;
+using ShellInterop.Core.JumpLists.Native;
 
-namespace WindowsShell.Core.JumpLists;
+namespace ShellInterop.Core.JumpLists;
 
 /// <summary>
 /// Publishes the Jump List Tasks category through ICustomDestinationList.
@@ -37,7 +37,7 @@ public sealed class JumpListPublisher : IJumpListPublisher
         _options = options ?? new JumpListPublisherOptions();
         _factory = factory;
         _processAppId = processAppId;
-        _thread = new Thread(WorkerLoop) { IsBackground = true, Name = "WindowsShell.Core.JumpList.STA" };
+        _thread = new Thread(WorkerLoop) { IsBackground = true, Name = "ShellInterop.Core.JumpList.STA" };
         _thread.SetApartmentState(ApartmentState.STA);
         _thread.Start();
     }

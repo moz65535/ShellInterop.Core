@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\WindowsShell.Core\WindowsShell.Core.csproj" />
+    <ProjectReference Include="..\..\src\ShellInterop.Core\ShellInterop.Core.csproj" />
   </ItemGroup>
 
 </Project>

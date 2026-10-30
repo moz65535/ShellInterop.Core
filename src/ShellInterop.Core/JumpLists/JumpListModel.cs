@@ -1,4 +1,4 @@
-namespace WindowsShell.Core.JumpLists;
+namespace ShellInterop.Core.JumpLists;
 
 /// <summary>One entry of the Jump List "Tasks" category. Immutable.</summary>
 public sealed record JumpTaskDefinition

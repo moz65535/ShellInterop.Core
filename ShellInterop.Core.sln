@@ -5,11 +5,11 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsShell.Core", "src\WindowsShell.Core\WindowsShell.Core.csproj", "{8BC2705D-785D-4798-8528-6DBED0B6B6EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellInterop.Core", "src\ShellInterop.Core\ShellInterop.Core.csproj", "{8BC2705D-785D-4798-8528-6DBED0B6B6EC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsShell.Core.Tests", "tests\WindowsShell.Core.Tests\WindowsShell.Core.Tests.csproj", "{7A647C9A-26AA-48AA-BA4D-D1D24F659BE1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellInterop.Core.Tests", "tests\ShellInterop.Core.Tests\ShellInterop.Core.Tests.csproj", "{7A647C9A-26AA-48AA-BA4D-D1D24F659BE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

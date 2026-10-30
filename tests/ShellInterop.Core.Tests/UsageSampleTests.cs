@@ -1,6 +1,6 @@
-using WindowsShell.Core.JumpLists;
+using ShellInterop.Core.JumpLists;
 
-namespace WindowsShell.Core.Tests;
+namespace ShellInterop.Core.Tests;
 
 /// <summary>
 /// Behaviour checks for the call sequence shown in docs/USAGE-AVALONIA.md, run against the fake Shell. They use the

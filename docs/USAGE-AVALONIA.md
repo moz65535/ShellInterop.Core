@@ -1,7 +1,7 @@
 # USAGE-AVALONIA
 
-WindowsShell.Core の公開 API だけを使って、Avalonia アプリに Jump List の **Tasks** を登録する手順。
-WindowsShell.Core は Avalonia 専用ではなく、WPF など他の .NET アプリでも同じ呼び出しで使える（UI フレームワーク非依存）。
+ShellInterop.Core の公開 API だけを使って、Avalonia アプリに Jump List の **Tasks** を登録する手順。
+ShellInterop.Core は Avalonia 専用ではなく、WPF など他の .NET アプリでも同じ呼び出しで使える（UI フレームワーク非依存）。
 
 この文書のコードは、公開型・公開コンストラクタ・公開メソッドだけで書かれ、`WindowsOnly`（`net10.0-windows`）と `CrossPlat`（`net10.0;net10.0-windows`）の
 2 構成でビルド（`dotnet build` のみ。起動も実 Shell 操作もしていない）して警告 0・エラー 0 を確認済み。実行時の挙動は、単体テスト（フェイク Shell）と
@@ -34,7 +34,7 @@ WindowsShell.Core は Avalonia 専用ではなく、WPF など他の .NET アプ
 <ItemGroup>
   <PackageReference Include="Avalonia" Version="12.1.4" />
   <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
-  <ProjectReference Include="..\path\to\WindowsShell.Core\WindowsShell.Core.csproj" />
+  <ProjectReference Include="..\path\to\ShellInterop.Core\ShellInterop.Core.csproj" />
 </ItemGroup>
 ```
 
@@ -88,12 +88,12 @@ AUMID の設定失敗の扱い:
 ```csharp
 #if WINDOWS
 using System.Runtime.InteropServices;
-using WindowsShell.Core;
-using WindowsShell.Core.JumpLists;
+using ShellInterop.Core;
+using ShellInterop.Core.JumpLists;
 
 namespace JumpListSample;
 
-/// <summary>Everything that touches WindowsShell.Core lives here, so other targets never see it.</summary>
+/// <summary>Everything that touches ShellInterop.Core lives here, so other targets never see it.</summary>
 internal static class WindowsIntegration
 {
     public static bool TrySetProcessIdentity(string appId)
@@ -292,12 +292,12 @@ await publisher.DeleteListAsync(appId);
 
 ## 7. Windows 以外の OS・クロスプラットフォームアプリ
 
-WindowsShell.Core は `net10.0-windows` のみを対象とし、他 OS では動かない。参照条件は実際の `dotnet build` で次のとおり確認した（確認時点の `WindowsShell.Core` は 0.1.0。初回公開版は 0.1.0-preview.1 で、参照条件に関わるTFMは変更していない）。
+ShellInterop.Core は `net10.0-windows` のみを対象とし、他 OS では動かない。参照条件は実際の `dotnet build` で次のとおり確認した（確認時点の `ShellInterop.Core` は 0.1.0。初回公開版は 0.1.0-preview.1 で、参照条件に関わるTFMは変更していない）。
 
 | 参照側の構成 | 結果（実ビルド） |
 |---|---|
 | `net10.0-windows` のアプリが直接 `ProjectReference` | 成功（警告 0・エラー 0） |
-| `net10.0;net10.0-windows` のマルチターゲットで、Windows ターゲットだけ条件付き参照 | 両ターゲット成功（警告 0・エラー 0）。`net10.0` の出力に `WindowsShell.Core.dll` は含まれない |
+| `net10.0;net10.0-windows` のマルチターゲットで、Windows ターゲットだけ条件付き参照 | 両ターゲット成功（警告 0・エラー 0）。`net10.0` の出力に `ShellInterop.Core.dll` は含まれない |
 | `net10.0`（Windows 指定なし）のアプリが直接 `ProjectReference` | **失敗 NU1201**（Core は `net10.0-windows7.0` のみ対応） |
 
 マルチターゲットの csproj:
@@ -309,7 +309,7 @@ WindowsShell.Core は `net10.0-windows` のみを対象とし、他 OS では動
 
 <!-- Only the Windows target references Core; the net10.0 target never sees it. -->
 <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-  <ProjectReference Include="..\path\to\WindowsShell.Core\WindowsShell.Core.csproj" />
+  <ProjectReference Include="..\path\to\ShellInterop.Core\ShellInterop.Core.csproj" />
 </ItemGroup>
 ```
 
@@ -319,7 +319,7 @@ Core を使うコードは `#if WINDOWS` で囲むか、Windows ターゲット�
 
 ## 8. 利用上の注意
 
-- WindowsShell.Core 本体には、署名付き承認や VM 隔離のような書込み制御はない。`JumpListPublisher` は渡された AppUserModelID の実 Jump List に書き込むため、いつ何を書くかは呼び出し側のアプリが決める。
+- ShellInterop.Core 本体には、署名付き承認や VM 隔離のような書込み制御はない。`JumpListPublisher` は渡された AppUserModelID の実 Jump List に書き込むため、いつ何を書くかは呼び出し側のアプリが決める。
 - 一般アプリでは `JumpListPublisher` がそのまま実 Shell（ユーザーの Jump List）を操作する。いつ・どの AUMID に対して書くかは呼び出し側が管理する（`RequireProcessAppIdMatch` と `AppIdFilter` オプションで誤操作を減らせる）。
 - 開発中のビルドで製品と同じ AUMID を使うと、実際の Jump List を書き換える。開発用には別の AUMID を使う。
 - AUMID は最初のウィンドウ生成前に設定する。ライブラリは自動設定しない。
