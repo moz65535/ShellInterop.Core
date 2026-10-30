@@ -4,7 +4,9 @@ A small, **Windows-only**, UI-framework-independent .NET library that manages th
 taskbar button through the documented Windows Shell COM API (`ICustomDestinationList`). It works from Avalonia, WPF,
 WinForms or a plain console/background process: it has no UI dependency and **no package dependencies**.
 
-> **Pre-release / PoC (version 0.1.0).** Not production ready. See "Status and limits" below.
+> **Pre-release / PoC (version 0.1.0-preview.1).** Not production ready. See "Status and limits" below.
+
+WindowsShell.Core is an unofficial, independently developed library. It is not developed, provided or endorsed by Microsoft.
 
 ## Target framework
 

@@ -209,7 +209,7 @@ public class InteropAndArchitectureTests
     {
         _ = ProcessAppIdentity.TryGet(); // read-only
         Assert.Throws<ArgumentException>(() => ProcessAppIdentity.Set("Has Space.X"));
-        Assert.Throws<ArgumentException>(() => ProcessAppIdentity.Set("JumpListLauncher.Win11", id => id.StartsWith("WindowsShell.Core.Poc.", StringComparison.Ordinal)));
+        Assert.Throws<ArgumentException>(() => ProcessAppIdentity.Set("Other.App", id => id.StartsWith("WindowsShell.Core.Poc.", StringComparison.Ordinal)));
         Assert.Throws<ArgumentException>(() => ProcessAppIdentity.Set(""));
     }
 

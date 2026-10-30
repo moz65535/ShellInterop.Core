@@ -292,7 +292,7 @@ await publisher.DeleteListAsync(appId);
 
 ## 7. Windows 以外の OS・クロスプラットフォームアプリ
 
-WindowsShell.Core は `net10.0-windows` のみを対象とし、他 OS では動かない。参照条件は実際の `dotnet build` で次のとおり確認した（`WindowsShell.Core` 0.1.0）。
+WindowsShell.Core は `net10.0-windows` のみを対象とし、他 OS では動かない。参照条件は実際の `dotnet build` で次のとおり確認した（確認時点の `WindowsShell.Core` は 0.1.0。初回公開版は 0.1.0-preview.1 で、参照条件に関わるTFMは変更していない）。
 
 | 参照側の構成 | 結果（実ビルド） |
 |---|---|

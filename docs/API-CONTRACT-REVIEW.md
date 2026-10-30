@@ -34,7 +34,7 @@ vtable 順序（ヘッダ通り。テスト `VtableOrder_MatchesSdkHeaders` と�
 - `AddUserTasks` に渡す各 IShellLink は **引数(SetArguments)必須**（空のセパレータのみ例外）、**パスまたは PIDL**、**アイコン位置**が必須。
   表示名は IShellLink の IPropertyStore の `System.Title`。説明(SetDescription)は任意。
 - `AbortList`: 「コミットせずにセッションを中断する」。コミット済み変更を戻す機能ではない。
-- Tasks は静的であることが推奨される（公式注記）。グループ切替での動的変更は技術的に禁止されていないが、アプリ側が最新性を保つ責任がある（JumpList Launcher の用途に関する設計上の注意）。
+- Tasks は静的であることが推奨される（公式注記）。グループ切替での動的変更は技術的に禁止されていないが、アプリ側が最新性を保つ責任がある。
 - AppUserModelID: 128 文字以内・空白不可・`CompanyName.ProductName[.SubProduct[.Version]]` 形式。
   `SetCurrentProcessExplicitAppUserModelID` は UI 表示・Jump List 操作・SHAddToRecentDocs より前の起動初期に呼ぶ。
   明示 ID を使う場合、Jump List 更新にも同じ ID を使う。
@@ -54,5 +54,5 @@ vtable 順序（ヘッダ通り。テスト `VtableOrder_MatchesSdkHeaders` と�
 
 classic `[ComImport]` + `[PreserveSig]`（全メソッド int 戻り）。`CoCreateInstance`(LibraryImport)で生成し HRESULT を取得、
 `Marshal.GetObjectForIUnknown` で RCW 化。`[GeneratedComInterface]` は PROPVARIANT 等のマーシャリングを自作する必要があり、
-Stage A で実Shellを叩けない以上、検証済みの in-memory テストで挙動を確認できる classic 方式を選択した。
+実Shellを使わずに検証する以上、検証済みの in-memory テストで挙動を確認できる classic 方式を選択した。
 トリミング/NativeAOT は対象外（Core は Windows デスクトップ用ライブラリ）。

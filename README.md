@@ -5,8 +5,10 @@ documented Windows Shell COM API (`ICustomDestinationList`). It has no package r
 WPF, WinForms, Avalonia, the Windows App SDK or any third-party Jump List library. It can be used from Avalonia, WPF,
 WinForms or console applications.
 
-> **Status: pre-release (version 0.1.0). Not published and not production ready.**
+> **Status: pre-release (version 0.1.0-preview.1). Not published and not production ready.**
 > Only one real-Shell operation has been verified so far (see [Verification status](#verification-status)).
+
+WindowsShell.Core is an unofficial, independently developed library. It is not developed, provided or endorsed by Microsoft.
 
 ## Requirements
 
