@@ -17,7 +17,11 @@ internal static class ShellGuids
     public static readonly Guid IidObjectArray = new("92CA9DCD-5622-4bba-A805-5E9F541BD8C9");
     public static readonly Guid IidObjectCollection = new("5632b1a4-e38a-400a-928a-d4cd63230295");
     public static readonly Guid IidShellLinkW = new("000214F9-0000-0000-C000-000000000046");
+    // IShellItem (ShObjIdl_core.h): only used as a QueryInterface probe, no managed declaration needed.
+    public static readonly Guid IidShellItem = new("43826D1E-E718-42EE-BC55-A1E261C37BFE");
     public static readonly Guid IidPropertyStore = new("886d8eeb-8cf2-4446-8d02-cdba1dbdcf99");
+
+    public static readonly PropertyKey PkeyIsDestListSeparator = new(new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), 6);
 
     // PKEY_Title (System.Title): propkey.h DEFINE_PROPERTYKEY(PKEY_Title, F29F85E0-4FF9-1068-AB91-08002B27B3D9, 2)
     public static readonly PropertyKey PkeyTitle = new(new Guid("F29F85E0-4FF9-1068-AB91-08002B27B3D9"), 2);
@@ -30,11 +34,12 @@ internal readonly struct PropertyKey(Guid formatId, uint propertyId)
     public readonly uint PropertyId = propertyId;
 }
 
-/// <summary>Minimal PROPVARIANT (24 bytes on x64, 16 on x86) — only VT_LPWSTR is ever produced.</summary>
+/// <summary>Minimal PROPVARIANT (24 bytes on x64, 16 on x86) — supports VT_LPWSTR and VT_BOOL.</summary>
 [StructLayout(LayoutKind.Sequential)]
 internal struct PropVariant
 {
     public const ushort VtLpwstr = 31;
+    public const ushort VtBool = 11;
 
     public ushort Vt;
     public ushort Reserved1;
@@ -48,6 +53,8 @@ internal struct PropVariant
         Vt = VtLpwstr,
         Data1 = Marshal.StringToCoTaskMemUni(value),
     };
+
+    public static PropVariant FromBoolean(bool value) => new() { Vt = VtBool, Data1 = value ? (nint)(short)-1 : 0 };
 
     public readonly string? AsString() => Vt == VtLpwstr && Data1 != 0 ? Marshal.PtrToStringUni(Data1) : null;
 }

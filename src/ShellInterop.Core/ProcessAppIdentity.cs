@@ -1,6 +1,4 @@
-using ShellInterop.Core.Interop;
-using ShellInterop.Core.JumpLists;
-using ShellInterop.Core.JumpLists.Native;
+using System.Runtime.InteropServices;
 
 namespace ShellInterop.Core;
 
@@ -14,15 +12,35 @@ public static class ProcessAppIdentity
     /// </summary>
     public static int Set(string appId, Predicate<string>? allowed = null)
     {
-        var errors = JumpListValidator.ValidateAppId(appId, new JumpListPublisherOptions { AppIdFilter = allowed });
-        if (errors.Count > 0)
+        var error = AppUserModelIdValidation.Validate(appId, allowed);
+        if (error is { } failure)
         {
-            throw new ArgumentException(string.Join("; ", errors.Select(e => e.Code)), nameof(appId));
+            throw new ArgumentException(failure.Code, nameof(appId));
         }
 
-        return NativeMethods.SetCurrentProcessExplicitAppUserModelID(appId);
+        return ProcessAppIdNative.SetCurrentProcessExplicitAppUserModelID(appId);
     }
 
     /// <summary>The explicit ID of this process, or null if none is set.</summary>
-    public static string? TryGet() => new Win32ProcessAppIdProvider().Get(out _);
+    public static string? TryGet() => ProcessAppIdNative.Get(out _);
+}
+
+internal static partial class ProcessAppIdNative
+{
+    [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    internal static partial int SetCurrentProcessExplicitAppUserModelID(string appId);
+
+    [LibraryImport("shell32.dll")]
+    private static partial int GetCurrentProcessExplicitAppUserModelID(out nint appId);
+
+    [LibraryImport("ole32.dll")]
+    private static partial void CoTaskMemFree(nint pv);
+
+    internal static string? Get(out int hr)
+    {
+        hr = GetCurrentProcessExplicitAppUserModelID(out nint raw);
+        if (hr < 0 || raw == 0) return null;
+        try { return Marshal.PtrToStringUni(raw); }
+        finally { CoTaskMemFree(raw); }
+    }
 }

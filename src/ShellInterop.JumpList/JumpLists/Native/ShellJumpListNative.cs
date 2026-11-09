@@ -25,11 +25,88 @@ internal sealed class ShellJumpListNative : IJumpListNative
         return hr;
     }
 
-    public int CreateTasks(IReadOnlyList<JumpTaskDefinition> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex)
-        => ShellLinkTaskBuilder.Build(tasks, out collection, out failedTaskIndex);
+    public int CreateTasks(IReadOnlyList<JumpListEntry> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex)
+        => ShellLinkTaskBuilder.BuildEntries(tasks, out collection, out failedTaskIndex);
 
     public int AddUserTasks(ITaskCollectionHandle collection)
         => Call(l => l.AddUserTasks(((ComTaskCollection)collection).Array));
+
+    public int CreateDestinations(IReadOnlyList<JumpTaskDefinition> links, out ITaskCollectionHandle? collection, out int failedIndex)
+        => ShellLinkTaskBuilder.Build(links, out collection, out failedIndex);
+
+    public int AppendCategory(string name, ITaskCollectionHandle collection)
+        => Call(l => l.AppendCategory(name, ((ComTaskCollection)collection).Array));
+
+    private const int LinkBufferChars = 32768;
+
+    public int ReadRemovedDestinations(out IReadOnlyList<RawRemovedDestination> items)
+    {
+        var result = new List<RawRemovedDestination>();
+        items = result;
+        if (_removedDestinations is not IObjectArray array)
+        {
+            return Hr.Unexpected;
+        }
+
+        try
+        {
+            int hr = array.GetCount(out uint count);
+            if (Hr.Failed(hr))
+            {
+                return hr;
+            }
+
+            for (uint i = 0; i < count; i++)
+            {
+                result.Add(ReadElement(array, i));
+            }
+
+            return Hr.Ok;
+        }
+        catch (Exception ex) when (ex is COMException or InvalidCastException or InvalidComObjectException or MarshalDirectiveException)
+        {
+            return Hr.FromException(ex);
+        }
+    }
+
+    private static RawRemovedDestination ReadElement(IObjectArray array, uint index)
+    {
+        object? obj = null;
+        try
+        {
+            if (Hr.Succeeded(array.GetAt(index, in ShellGuids.IidShellLinkW, out obj)) && obj is IShellLinkW link)
+            {
+                // Anything but a clean S_OK (S_FALSE = no file-system path, truncation) means the identity is not trustworthy.
+                var path = new System.Text.StringBuilder(LinkBufferChars);
+                var args = new System.Text.StringBuilder(LinkBufferChars);
+                if (link.GetPath(path, LinkBufferChars, 0, 0) == Hr.Ok
+                    && link.GetArguments(args, LinkBufferChars) == Hr.Ok
+                    && path.Length < LinkBufferChars - 1 && args.Length < LinkBufferChars - 1)
+                {
+                    return new RawRemovedDestination(RawRemovedKind.Link, path.ToString(), args.ToString());
+                }
+
+                return new RawRemovedDestination(RawRemovedKind.Unreadable);
+            }
+
+            ComRelease.Final(obj);
+            obj = null;
+            if (Hr.Succeeded(array.GetAt(index, in ShellGuids.IidShellItem, out obj)) && obj is not null)
+            {
+                return new RawRemovedDestination(RawRemovedKind.ShellItem);
+            }
+
+            return new RawRemovedDestination(RawRemovedKind.Unreadable);
+        }
+        catch (Exception ex) when (ex is COMException or InvalidCastException or InvalidComObjectException or MarshalDirectiveException)
+        {
+            return new RawRemovedDestination(RawRemovedKind.Unreadable);
+        }
+        finally
+        {
+            ComRelease.Final(obj);
+        }
+    }
 
     public int CommitList() => Call(l => l.CommitList());
 
@@ -107,6 +184,9 @@ internal sealed class ComTaskCollection : ITaskCollectionHandle
 internal static class ShellLinkTaskBuilder
 {
     public static int Build(IReadOnlyList<JumpTaskDefinition> tasks, out ITaskCollectionHandle? handle, out int failedTaskIndex)
+        => BuildEntries(tasks.Select(JumpListEntry.ForTask).ToArray(), out handle, out failedTaskIndex);
+
+    public static int BuildEntries(IReadOnlyList<JumpListEntry> tasks, out ITaskCollectionHandle? handle, out int failedTaskIndex)
     {
         handle = null;
         failedTaskIndex = -1;
@@ -122,7 +202,7 @@ internal static class ShellLinkTaskBuilder
         {
             for (int i = 0; i < tasks.Count; i++)
             {
-                hr = AddTask(result, tasks[i]);
+                hr = tasks[i].IsSeparator ? AddSeparator(result) : AddTask(result, tasks[i].Task!);
                 if (Hr.Failed(hr))
                 {
                     failedTaskIndex = i;
@@ -144,6 +224,19 @@ internal static class ShellLinkTaskBuilder
             result.Dispose();
             throw;
         }
+    }
+
+    private static int AddSeparator(ComTaskCollection target)
+    {
+        int hr = ComActivator.Create(ShellGuids.ClsidShellLink, ShellGuids.IidShellLinkW, out object? obj);
+        if (Hr.Failed(hr)) return hr;
+        target.TrackLink(obj!);
+        var store = (IPropertyStore)obj!;
+        var value = PropVariant.FromBoolean(true);
+        try { hr = store.SetValue(in ShellGuids.PkeyIsDestListSeparator, in value); }
+        finally { NativeMethods.PropVariantClear(ref value); }
+        if (Hr.Failed(hr) || Hr.Failed(hr = store.Commit())) return hr;
+        return target.Collection.AddObject(obj!);
     }
 
     private static int AddTask(ComTaskCollection target, JumpTaskDefinition task)

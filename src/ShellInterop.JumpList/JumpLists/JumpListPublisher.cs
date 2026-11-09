@@ -255,21 +255,30 @@ public sealed class JumpListPublisher : IJumpListPublisher
     {
         var sw = Stopwatch.StartNew();
         string appId = definition.AppUserModelId!;
-        JumpTaskDefinition[] tasks = definition.Tasks.Select(t => t!).ToArray();
+        JumpListEntry[] entries = definition.Entries.Select(e => e!).ToArray();
+        int taskCount = definition.Tasks.Count;
         var diagnostics = new List<string>();
-        Log("ApplyStart", $"aumid={appId} tasks={tasks.Length}");
+        var categories = definition.Categories.Select(c => c!).ToArray();
+        var tracking = definition.RemovedDestinationTracking;
+        IReadOnlyList<RemovedDestination> removed = [];
+        var displayMode = JumpListDisplayMode.TasksOnly;
+        var fallbackReason = JumpListFallbackReason.None;
+        Log("ApplyStart", $"aumid={appId} tasks={taskCount} categories={categories.Length} tracking={tracking is not null}");
 
         JumpListApplyResult Done(JumpListApplyStatus status, JumpListShellState state, JumpListError? error = null, JumpListError? preceding = null)
             => new()
             {
                 Status = status,
-                RequestedTaskCount = tasks.Length,
+                RequestedTaskCount = taskCount,
                 ShellState = state,
                 Error = error,
                 PrecedingError = preceding,
                 Diagnostics = diagnostics.ToArray(),
                 QueueWait = queueWait,
                 Elapsed = sw.Elapsed,
+                EffectiveDisplayMode = status == JumpListApplyStatus.Success ? displayMode : JumpListDisplayMode.None,
+                FallbackReason = fallbackReason,
+                RemovedDestinations = removed,
             };
 
         if (CheckProcessAppId(appId) is { } mismatch)
@@ -279,6 +288,7 @@ public sealed class JumpListPublisher : IJumpListPublisher
 
         IJumpListNative? list = null;
         ITaskCollectionHandle? collection = null;
+        var categoryCollections = new List<ITaskCollectionHandle>();
         var stage = Stage.None;
         try
         {
@@ -308,10 +318,148 @@ public sealed class JumpListPublisher : IJumpListPublisher
 
             stage = Stage.SessionOpen;
 
-            if (tasks.Length > 0)
+            var excluded = new HashSet<string>(tracking?.ExcludedDestinationKeys ?? [], StringComparer.Ordinal);
+
+            // Reads and classifies the removed list of the CURRENT session (one list for all categories). Returns the
+            // aborted result when the session must stop, or null when it is safe to continue.
+            JumpListApplyResult? CheckRemoved()
             {
-                hr = list.CreateTasks(tasks, out collection, out int failedIndex);
-                Log("CreateTasks", $"count={tasks.Length} failedIndex={failedIndex}", hr);
+                if (tracking is null)
+                {
+                    return null;
+                }
+
+                // Read BEFORE anything else: CommitList would otherwise discard the removed list without the caller knowing.
+                int rhr = list!.ReadRemovedDestinations(out var raw);
+                Log("ReadRemoved", $"count={raw.Count}", rhr);
+                if (Hr.Failed(rhr))
+                {
+                    return AbortAfterFailure(list!, JumpListApplyStatus.RemovedDestinationUnidentifiable,
+                        new(JumpListFailurePhase.ReadRemoved, rhr, "The removed-destinations list could not be read."), Done);
+                }
+
+                removed = RemovedDestinationClassifier.Classify(raw, RemovedDestinationClassifier.BuildMatchers(definition), excluded);
+                if (removed.Any(r => r.Kind is RemovedDestinationKind.Unreadable or RemovedDestinationKind.Ambiguous))
+                {
+                    return AbortAfterFailure(list!, JumpListApplyStatus.RemovedDestinationUnidentifiable,
+                        new(JumpListFailurePhase.ReadRemoved, null, "A removed destination could not be identified safely (unreadable or ambiguous); nothing was committed."), Done);
+                }
+
+                if (removed.Any(r => r.Kind == RemovedDestinationKind.Matched && !r.AlreadyExcluded))
+                {
+                    // Not an error: the caller must persist the keys first, then Apply again. Nothing is committed.
+                    return AbortAfterFailure(list!, JumpListApplyStatus.RemovedDestinationsPending,
+                        new(JumpListFailurePhase.ReadRemoved, null, "New removed destinations detected; persist them and apply again."), Done, statusOnly: true);
+                }
+
+                return null;
+            }
+
+            if (CheckRemoved() is { } removedStop)
+            {
+                return removedStop;
+            }
+
+            var finalEntries = entries.ToList();
+            // Categories keep the caller's order; a category whose destinations are all excluded is never appended.
+            var plans = categories
+                .Select(c => (Category: c, Shown: c.Destinations.Where(d => !excluded.Contains(d.Key)).ToArray()))
+                .Where(p => p.Shown.Length > 0)
+                .ToList();
+            if (categories.Length > 0 && plans.Count == 0)
+            {
+                displayMode = JumpListDisplayMode.CategoryEmpty;
+            }
+
+            bool accessDenied = false;
+            int appended = 0;
+            foreach (var (category, shown) in plans)
+            {
+                hr = list.CreateDestinations(shown.Select(d => d.Link).ToArray(), out var handle, out int failedDestination);
+                Log("CreateDestinations", $"category={category.Name} count={shown.Length} failedIndex={failedDestination}", hr);
+                if (Hr.Failed(hr))
+                {
+                    return AbortAfterFailure(list, JumpListApplyStatus.TaskCreationFailed,
+                        new(JumpListFailurePhase.CreateTask, hr, "Shell link creation failed for a category destination.", failedDestination >= 0 ? failedDestination : null), Done);
+                }
+
+                categoryCollections.Add(handle!);
+                hr = list.AppendCategory(category.Name, handle!);
+                Log("AppendCategory", $"name={category.Name} count={shown.Length}", hr);
+                if (Hr.Succeeded(hr))
+                {
+                    appended++;
+                    displayMode = JumpListDisplayMode.CategoryAndTasks;
+                }
+                else if (hr == Hr.AccessDenied)
+                {
+                    // Privacy setting/policy applies to the whole list: stop appending, never commit a partial category set.
+                    accessDenied = true;
+                    break;
+                }
+                else
+                {
+                    return AbortAfterFailure(list, JumpListApplyStatus.CategoryAppendFailed,
+                        new(JumpListFailurePhase.AppendCategory, hr, "AppendCategory failed."), Done);
+                }
+            }
+
+            if (accessDenied)
+            {
+                fallbackReason = JumpListFallbackReason.PrivacyAccessDenied;
+                displayMode = JumpListDisplayMode.CategorySkipped;
+                if (appended > 0)
+                {
+                    // Earlier categories were already appended in this session: discard it and retry ONCE with Tasks only,
+                    // so categories and fallback tasks never mix. The retry is not itself retried.
+                    int ahr = SafeAbort(list);
+                    Log("AbortList", "abort before privacy fallback retry", ahr);
+                    if (Hr.Failed(ahr))
+                    {
+                        return Done(JumpListApplyStatus.AbortFailed, JumpListShellState.Unknown, new(JumpListFailurePhase.AbortList, ahr, "AbortList failed."),
+                            new(JumpListFailurePhase.AppendCategory, Hr.AccessDenied, "AppendCategory failed with E_ACCESSDENIED after earlier categories succeeded."));
+                    }
+
+                    stage = Stage.Created;
+                    hr = list.BeginList();
+                    Log("BeginList", "begin transaction (privacy fallback retry)", hr);
+                    if (Hr.Failed(hr))
+                    {
+                        return Done(JumpListApplyStatus.BeginFailed, JumpListShellState.Unchanged, new(JumpListFailurePhase.BeginList, hr, "BeginList failed on the privacy fallback retry."));
+                    }
+
+                    stage = Stage.SessionOpen;
+                    if (CheckRemoved() is { } retryStop)
+                    {
+                        return retryStop;
+                    }
+                }
+
+                foreach (var category in plans.Select(p => p.Category))
+                {
+                    if (category.TasksFallback is not { } fallback)
+                    {
+                        continue;
+                    }
+
+                    var block = BuildFallbackBlock(fallback, excluded);
+                    if (block.Count > 0)
+                    {
+                        if (finalEntries.Count > 0 && !finalEntries[^1].IsSeparator)
+                        {
+                            finalEntries.Add(JumpListEntry.Separator());
+                        }
+
+                        finalEntries.AddRange(block);
+                        displayMode = JumpListDisplayMode.TasksFallback;
+                    }
+                }
+            }
+
+            if (finalEntries.Count > 0)
+            {
+                hr = list.CreateTasks(finalEntries, out collection, out int failedIndex);
+                Log("CreateTasks", $"count={finalEntries.Count} failedIndex={failedIndex}", hr);
                 if (Hr.Failed(hr))
                 {
                     return AbortAfterFailure(list, JumpListApplyStatus.TaskCreationFailed,
@@ -319,7 +467,7 @@ public sealed class JumpListPublisher : IJumpListPublisher
                 }
 
                 hr = list.AddUserTasks(collection!);
-                Log("AddUserTasks", $"count={tasks.Length}", hr);
+                Log("AddUserTasks", $"count={finalEntries.Count}", hr);
                 if (Hr.Failed(hr))
                 {
                     return AbortAfterFailure(list, JumpListApplyStatus.AddTasksFailed,
@@ -356,6 +504,11 @@ public sealed class JumpListPublisher : IJumpListPublisher
         finally
         {
             Release(collection, "task collection", diagnostics);
+            foreach (var handle in categoryCollections)
+            {
+                Release(handle, "category collection", diagnostics);
+            }
+
             Release(list, "destination list", diagnostics);
             Log("ApplyEnd", $"elapsedMs={sw.Elapsed.TotalMilliseconds:F1}");
         }
@@ -365,13 +518,36 @@ public sealed class JumpListPublisher : IJumpListPublisher
         IJumpListNative list,
         JumpListApplyStatus failureStatus,
         JumpListError failure,
-        Func<JumpListApplyStatus, JumpListShellState, JumpListError?, JumpListError?, JumpListApplyResult> done)
+        Func<JumpListApplyStatus, JumpListShellState, JumpListError?, JumpListError?, JumpListApplyResult> done,
+        bool statusOnly = false)
     {
         int ahr = SafeAbort(list);
         Log("AbortList", "abort after pre-commit failure", ahr);
         return Hr.Failed(ahr)
             ? done(JumpListApplyStatus.AbortFailed, JumpListShellState.Unknown, new(JumpListFailurePhase.AbortList, ahr, "AbortList failed."), failure)
-            : done(failureStatus, JumpListShellState.Unchanged, failure, null);
+            : done(failureStatus, JumpListShellState.Unchanged, statusOnly ? null : failure, null);
+    }
+
+    /// <summary>Drops excluded keyed entries, then removes leading, trailing and consecutive separators.</summary>
+    private static List<JumpListEntry> BuildFallbackBlock(IReadOnlyList<JumpListEntry?> fallback, IReadOnlySet<string> excluded)
+    {
+        var block = new List<JumpListEntry>();
+        foreach (var e in fallback.Select(e => e!).Where(e => e.Key is null || !excluded.Contains(e.Key)))
+        {
+            if (e.IsSeparator && (block.Count == 0 || block[^1].IsSeparator))
+            {
+                continue;
+            }
+
+            block.Add(e);
+        }
+
+        while (block.Count > 0 && block[^1].IsSeparator)
+        {
+            block.RemoveAt(block.Count - 1);
+        }
+
+        return block;
     }
 
     private JumpListApplyResult ExecuteDelete(string appId, TimeSpan queueWait)

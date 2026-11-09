@@ -1,3 +1,4 @@
+using ShellInterop.Core;
 using ShellInterop.Core.Interop;
 
 namespace ShellInterop.Core.JumpLists.Native;
@@ -6,6 +7,11 @@ namespace ShellInterop.Core.JumpLists.Native;
 internal interface ITaskCollectionHandle : IDisposable
 {
 }
+
+internal enum RawRemovedKind { Link, ShellItem, Unreadable }
+
+/// <summary>One element of the removed array before matching. Path/Arguments are set only for a completely read link.</summary>
+internal sealed record RawRemovedDestination(RawRemovedKind Kind, string? Path = null, string? Arguments = null);
 
 /// <summary>
 /// Thin seam over ICustomDestinationList. All members return raw HRESULTs and must only be called on the STA worker.
@@ -17,9 +23,17 @@ internal interface IJumpListNative : IDisposable
 
     int BeginList();
 
-    int CreateTasks(IReadOnlyList<JumpTaskDefinition> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex);
+    int CreateTasks(IReadOnlyList<JumpListEntry> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex);
 
     int AddUserTasks(ITaskCollectionHandle collection);
+
+    /// <summary>Reads the removed-destinations array captured by BeginList. Each element is classified raw; a failure to read any single element is reported as <see cref="RawRemovedKind.Unreadable"/>, never skipped.</summary>
+    int ReadRemovedDestinations(out IReadOnlyList<RawRemovedDestination> items);
+
+    /// <summary>Builds shell links for category destinations (same builder as tasks).</summary>
+    int CreateDestinations(IReadOnlyList<JumpTaskDefinition> links, out ITaskCollectionHandle? collection, out int failedIndex);
+
+    int AppendCategory(string name, ITaskCollectionHandle collection);
 
     int CommitList();
 
@@ -43,23 +57,7 @@ internal interface IProcessAppIdProvider
 
 internal sealed class Win32ProcessAppIdProvider : IProcessAppIdProvider
 {
-    public string? Get(out int hr)
-    {
-        hr = NativeMethods.GetCurrentProcessExplicitAppUserModelID(out nint raw);
-        if (Hr.Failed(hr) || raw == 0)
-        {
-            return null;
-        }
-
-        try
-        {
-            return System.Runtime.InteropServices.Marshal.PtrToStringUni(raw);
-        }
-        finally
-        {
-            NativeMethods.CoTaskMemFree(raw);
-        }
-    }
+    public string? Get(out int hr) => ProcessAppIdNative.Get(out hr);
 }
 
 internal sealed class ShellJumpListNativeFactory : IJumpListNativeFactory

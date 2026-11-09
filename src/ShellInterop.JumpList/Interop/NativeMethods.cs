@@ -12,14 +12,7 @@ internal static partial class NativeMethods
     [LibraryImport("ole32.dll")]
     public static partial int PropVariantClear(ref PropVariant pvar);
 
-    [LibraryImport("ole32.dll")]
-    public static partial void CoTaskMemFree(nint pv);
 
-    [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
-    public static partial int SetCurrentProcessExplicitAppUserModelID(string appId);
-
-    [LibraryImport("shell32.dll")]
-    public static partial int GetCurrentProcessExplicitAppUserModelID(out nint appId);
 }
 
 internal static class Hr
@@ -30,6 +23,7 @@ internal static class Hr
     public const int Pointer = unchecked((int)0x80004003);
     public const int InvalidArg = unchecked((int)0x80070057);
     public const int Unexpected = unchecked((int)0x8000FFFF);
+    public const int AccessDenied = unchecked((int)0x80070005);
 
     public static bool Failed(int hr) => hr < 0;
 

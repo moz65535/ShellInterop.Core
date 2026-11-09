@@ -227,7 +227,7 @@ public class InteropAndArchitectureTests
     [Fact]
     public void T19_CoreProjectFile_HasNoPackagesOrUiFrameworkSwitches()
     {
-        string? dir = AppContext.BaseDirectory;
+        string? dir = Environment.GetEnvironmentVariable("SHELLINTEROP_SOURCE_ROOT") ?? AppContext.BaseDirectory;
         string? csproj = null;
         while (dir is not null && csproj is null)
         {
@@ -244,6 +244,30 @@ public class InteropAndArchitectureTests
         Assert.DoesNotContain("<UseWindowsForms>", xml);
         Assert.DoesNotContain("Avalonia", xml);
         Assert.DoesNotContain("WindowsAppSDK", xml);
+    }
+
+    [Fact]
+    public void SplitAssemblies_AreOneWay_AndJumpListTypesAreOnlyInJumpList()
+    {
+        var core = typeof(ProcessAppIdentity).Assembly;
+        var jump = typeof(JumpListPublisher).Assembly;
+        Assert.Equal("ShellInterop.Core", core.GetName().Name);
+        Assert.Equal("ShellInterop.JumpList", jump.GetName().Name);
+        Assert.DoesNotContain(core.GetReferencedAssemblies(), a => a.Name == "ShellInterop.JumpList");
+        Assert.Contains(jump.GetReferencedAssemblies(), a => a.Name == "ShellInterop.Core");
+        Assert.DoesNotContain(core.GetTypes(), t => t.Namespace?.StartsWith("ShellInterop.Core.JumpLists", StringComparison.Ordinal) == true);
+        Assert.DoesNotContain(core.GetTypes(), t => t.Name == "ICustomDestinationList");
+    }
+
+    [Theory]
+    [InlineData("", "AppId.Empty")]
+    [InlineData("Bad Name.App", "AppId.InvalidFormat")]
+    [InlineData("OneSegment", "AppId.InvalidFormat")]
+    public void ProcessAppIdentity_RejectsInvalidIdsWithSameCodeAsJumpList(string id, string code)
+    {
+        var error = Assert.Single(JumpListValidator.ValidateAppId(id));
+        Assert.Equal(code, error.Code);
+        Assert.Contains(code, Assert.Throws<ArgumentException>(() => ProcessAppIdentity.Set(id)).Message);
     }
 
     [Fact]

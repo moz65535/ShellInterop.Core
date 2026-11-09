@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DeterministicSourcePaths>true</DeterministicSourcePaths>
+    <PackageId>ShellInterop.JumpList</PackageId>
+    <Version>0.1.0-preview.1</Version>
+    <Authors>moz</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Description>Windows Jump List Tasks publisher and Shell COM interop. Pre-release; not a Microsoft product.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ShellInterop.Core\ShellInterop.Core.csproj" />
+    <InternalsVisibleTo Include="ShellInterop.Core.Tests" />
+    <None Include="..\..\docs\JUMPLIST-PACKAGE-README.md" Pack="true" PackagePath="README.md" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <!-- The old Core package cannot satisfy this assembly's new internal dependency. -->
+  <Target Name="RequireCoordinatedSplitVersion" BeforeTargets="GenerateNuspec" Condition="'$(Version)' == '0.1.0-preview.1'">
+    <Error Text="Choose a coordinated new version for both split projects before packing; Core 0.1.0-preview.1 is incompatible." />
+  </Target>
+</Project>

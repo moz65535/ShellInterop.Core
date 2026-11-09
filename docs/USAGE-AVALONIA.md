@@ -1,17 +1,19 @@
 # USAGE-AVALONIA
 
-ShellInterop.Core の公開 API だけを使って、Avalonia アプリに Jump List の **Tasks** を登録する手順。
+ShellInterop.Core と ShellInterop.JumpList の公開 API を使って、Avalonia アプリに Jump List の **Tasks** を登録する手順。
 ShellInterop.Core は Avalonia 専用ではなく、WPF など他の .NET アプリでも同じ呼び出しで使える（UI フレームワーク非依存）。
 
 この文書のコードは、公開型・公開コンストラクタ・公開メソッドだけで書かれ、`WindowsOnly`（`net10.0-windows`）と `CrossPlat`（`net10.0;net10.0-windows`）の
 2 構成でビルド（`dotnet build` のみ。起動も実 Shell 操作もしていない）して警告 0・エラー 0 を確認済み。実行時の挙動は、単体テスト（フェイク Shell）と
 隔離された Windows 検証環境での Tasks 2 件の登録 1 回の実機確認（後述）の範囲でしか確認していない。
 
+> 以下の既存ビルド・実 Shell 検証結果は分離前の証拠です。分離後の実 Shell 検証は未実施です。
+
 ## 0. 先に知っておくこと
 
 - 実 Shell で確認済みなのは、検証用ホストによる **Tasks 2 件の登録（ApplyAsync 1 回）** だけ（ゲスト VM 上）。
 - 実 Shell **未検証**: 空 Tasks による消去、`DeleteListAsync`、別 Tasks セットへの置換、Jump List タスクからのアプリ起動、再起動後の永続性。
-- 扱えるのは Tasks のみ。カテゴリ、Recent/Frequent、区切り線は未実装。
+- 扱えるのは Tasks のみ。区切り線は実装済みだが実 Shell 表示は未検証。カスタムカテゴリ（単一・複数）は ShellInterop.JumpList で実装済み（本書では扱わない。詳細は docs/JUMPLIST-PACKAGE-README.md）。Recent/Frequent は未実装。
 - `JumpListApplyResult.ShellState == Applied` は **Shell API が成功を返した**という意味で、タスクバーでの表示を確認したという意味ではない（`VisuallyConfirmed` は常に false）。
 
 ## 1. 前提
@@ -35,6 +37,7 @@ ShellInterop.Core は Avalonia 専用ではなく、WPF など他の .NET アプ
   <PackageReference Include="Avalonia" Version="12.1.4" />
   <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
   <ProjectReference Include="..\path\to\ShellInterop.Core\ShellInterop.Core.csproj" />
+  <ProjectReference Include="..\path\to\ShellInterop.JumpList\ShellInterop.JumpList.csproj" />
 </ItemGroup>
 ```
 
@@ -310,6 +313,7 @@ ShellInterop.Core は `net10.0-windows` のみを対象とし、他 OS では動
 <!-- Only the Windows target references Core; the net10.0 target never sees it. -->
 <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
   <ProjectReference Include="..\path\to\ShellInterop.Core\ShellInterop.Core.csproj" />
+  <ProjectReference Include="..\path\to\ShellInterop.JumpList\ShellInterop.JumpList.csproj" />
 </ItemGroup>
 ```
 

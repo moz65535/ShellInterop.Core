@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ShellInterop.Core\ShellInterop.Core.csproj" />
+    <ProjectReference Include="..\..\src\ShellInterop.JumpList\ShellInterop.JumpList.csproj" />
   </ItemGroup>
 
 </Project>

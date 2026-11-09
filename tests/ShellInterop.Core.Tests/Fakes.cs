@@ -42,6 +42,8 @@ internal sealed class FakeShell : IJumpListNativeFactory
     /// <summary>The simulated stored Tasks list (replaced on a successful commit, like the Shell's transaction).</summary>
     public List<JumpTaskDefinition> Store { get; } = [];
 
+    public List<JumpListEntry> LastEntries { get; } = [];
+
     public List<List<JumpTaskDefinition>> CommittedSets { get; } = [];
 
     public string? DeletedAppId;
@@ -52,6 +54,27 @@ internal sealed class FakeShell : IJumpListNativeFactory
     public int HandlesDisposed;
     public int DoubleDisposes;
     public int MaxConcurrentLists;
+
+    // ---- removed list / category (SHELL-JL-04)
+    public int ReadRemovedHr;
+    public int CreateDestinationsHr;
+    public int AppendCategoryHr;
+
+    /// <summary>Per-call override (1-based AppendCategory call number) of <see cref="AppendCategoryHr"/>.</summary>
+    public Dictionary<int, int> AppendCategoryHrByCall { get; } = [];
+
+    public int AppendCategoryCalls;
+
+    /// <summary>What BeginList would hand back as removed destinations; consumed (cleared) by a successful CommitList.</summary>
+    public List<RawRemovedDestination> Removed { get; } = [];
+
+    /// <summary>Per-call override (1-based ReadRemovedDestinations call number) of <see cref="Removed"/>; unset calls use <see cref="Removed"/>.</summary>
+    public Dictionary<int, List<RawRemovedDestination>> RemovedByReadCall { get; } = [];
+
+    public int ReadRemovedCalls;
+
+    /// <summary>(name, links) of every AppendCategory call that returned success.</summary>
+    public List<(string Name, List<JumpTaskDefinition> Links)> AppendedCategories { get; } = [];
 
     public void Seed(params JumpTaskDefinition[] tasks)
     {
@@ -162,7 +185,7 @@ internal sealed class FakeShell : IJumpListNativeFactory
             return owner.BeginHr;
         }
 
-        public int CreateTasks(IReadOnlyList<JumpTaskDefinition> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex)
+        public int CreateTasks(IReadOnlyList<JumpListEntry> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex)
         {
             owner.Record("CreateTasks");
             failedTaskIndex = -1;
@@ -178,7 +201,9 @@ internal sealed class FakeShell : IJumpListNativeFactory
                 owner.HandlesCreated++;
             }
 
-            collection = new FakeHandle(owner, tasks.ToList());
+            owner.LastEntries.Clear();
+            owner.LastEntries.AddRange(tasks);
+            collection = new FakeHandle(owner, tasks.Where(e => !e.IsSeparator).Select(e => e.Task!).ToList());
             return 0;
         }
 
@@ -193,6 +218,46 @@ internal sealed class FakeShell : IJumpListNativeFactory
             return owner.AddTasksHr;
         }
 
+        public int ReadRemovedDestinations(out IReadOnlyList<RawRemovedDestination> items)
+        {
+            owner.Record("ReadRemoved");
+            var source = owner.RemovedByReadCall.TryGetValue(++owner.ReadRemovedCalls, out var perCall) ? perCall : owner.Removed;
+            items = owner.ReadRemovedHr < 0 ? [] : source.ToList();
+            return owner.ReadRemovedHr;
+        }
+
+        public int CreateDestinations(IReadOnlyList<JumpTaskDefinition> links, out ITaskCollectionHandle? collection, out int failedIndex)
+        {
+            owner.Record("CreateDestinations");
+            failedIndex = -1;
+            if (owner.CreateDestinationsHr < 0)
+            {
+                collection = null;
+                failedIndex = 0;
+                return owner.CreateDestinationsHr;
+            }
+
+            lock (owner._lock)
+            {
+                owner.HandlesCreated++;
+            }
+
+            collection = new FakeHandle(owner, links.ToList());
+            return 0;
+        }
+
+        public int AppendCategory(string name, ITaskCollectionHandle collection)
+        {
+            owner.Record("AppendCategory");
+            int hr = owner.AppendCategoryHrByCall.TryGetValue(++owner.AppendCategoryCalls, out int h) ? h : owner.AppendCategoryHr;
+            if (hr >= 0)
+            {
+                owner.AppendedCategories.Add((name, ((FakeHandle)collection).Tasks.ToList()));
+            }
+
+            return hr;
+        }
+
         public int CommitList()
         {
             owner.Record("CommitList");
@@ -200,6 +265,7 @@ internal sealed class FakeShell : IJumpListNativeFactory
             if (owner.CommitHr >= 0)
             {
                 _committed = true;
+                owner.Removed.Clear();
                 owner.Store.Clear();
                 owner.Store.AddRange(_pending ?? []);
                 owner.CommittedSets.Add(owner.Store.ToList());

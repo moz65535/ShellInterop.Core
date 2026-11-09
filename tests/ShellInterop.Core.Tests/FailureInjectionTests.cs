@@ -39,7 +39,7 @@ internal sealed class FaultInjectingFactory(IJumpListNativeFactory inner, Inject
 
         public int BeginList() => real.BeginList();
 
-        public int CreateTasks(IReadOnlyList<JumpTaskDefinition> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex)
+        public int CreateTasks(IReadOnlyList<JumpListEntry> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex)
         {
             if (owner.ShouldFire(InjectionPoint.ExceptionAfterBeginList))
             {
@@ -57,6 +57,13 @@ internal sealed class FaultInjectingFactory(IJumpListNativeFactory inner, Inject
         }
 
         public int AddUserTasks(ITaskCollectionHandle collection) => owner.ShouldFire(InjectionPoint.AddUserTasks) ? owner.InjectedHResult : real.AddUserTasks(collection);
+
+        public int ReadRemovedDestinations(out IReadOnlyList<RawRemovedDestination> items) => real.ReadRemovedDestinations(out items);
+
+        public int CreateDestinations(IReadOnlyList<JumpTaskDefinition> links, out ITaskCollectionHandle? collection, out int failedIndex)
+            => real.CreateDestinations(links, out collection, out failedIndex);
+
+        public int AppendCategory(string name, ITaskCollectionHandle collection) => real.AppendCategory(name, collection);
 
         public int CommitList() => owner.ShouldFire(InjectionPoint.CommitList) ? owner.InjectedHResult : real.CommitList();
 

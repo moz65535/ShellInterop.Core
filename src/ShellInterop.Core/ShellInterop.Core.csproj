@@ -8,18 +8,22 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Version>0.1.0-preview.1</Version>
+    <!-- Maps source paths to /_/ so the PDB path embedded in the DLL does not contain the local directory. -->
+    <DeterministicSourcePaths>true</DeterministicSourcePaths>
     <!-- Intentionally NO UseWPF / UseWindowsForms / PackageReference: Core depends on the BCL and Windows COM only. -->
   </PropertyGroup>
 
-  <!-- NuGet metadata. RepositoryType, RepositoryUrl and PackageProjectUrl are intentionally NOT set until the GitHub
-       repository exists (planned: github.com/moz65535/ShellInterop.Core). Signing and SourceLink are not set yet either. -->
+  <!-- NuGet metadata. Signing is not set. Source Link comes from the .NET SDK (repository URL and commit, no extra package). -->
   <PropertyGroup>
+    <RepositoryUrl>https://github.com/moz65535/ShellInterop.Core</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/moz65535/ShellInterop.Core</PackageProjectUrl>
     <PackageId>ShellInterop.Core</PackageId>
     <Product>ShellInterop.Core</Product>
     <Authors>moz</Authors>
     <Copyright>Copyright (c) 2026 moz</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Description>Windows-only .NET library for the Jump List Tasks category (ICustomDestinationList), AppUserModelID helpers and the STA worker boundary. Independent of any UI framework. Pre-release. Unofficial, independently developed library; not a Microsoft product.</Description>
+    <Description>Windows-only .NET library for common Shell interop and process AppUserModelID helpers. Independent of any UI framework. Pre-release. Unofficial, independently developed library; not a Microsoft product.</Description>
     <PackageTags>jumplist;jump-list;taskbar;windows;shell;appusermodelid</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
@@ -32,6 +36,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="ShellInterop.Core.Tests" />
+    <InternalsVisibleTo Include="ShellInterop.JumpList" />
   </ItemGroup>
 
 </Project>
