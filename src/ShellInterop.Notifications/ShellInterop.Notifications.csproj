@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Windows SDK .NET projection (CsWinRT, shipped with the .NET SDK targeting pack) needs a versioned Windows TFM.
+         19041 is the lowest version proven by SHELL-NOTIF-02 (method P). Core / JumpList stay on net10.0-windows. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DeterministicSourcePaths>true</DeterministicSourcePaths>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>ShellInterop.Notifications</PackageId>
+    <Version>0.1.0-preview.1</Version>
+    <Authors>moz</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Description>Windows Toast sender (Windows SDK .NET projection, no Windows App SDK) with read-only AUMID shortcut inspection. Pre-release; not a Microsoft product.</Description>
+    <!-- Intentionally NO UseWPF / UseWindowsForms / Windows App SDK PackageReference. -->
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="ShellInterop.Core.Tests" />
+  </ItemGroup>
+</Project>

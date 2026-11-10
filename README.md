@@ -1,9 +1,10 @@
 # ShellInterop.Core
 
-Two Windows-only, UI-framework-independent .NET libraries:
+Three Windows-only, UI-framework-independent .NET libraries:
 
 - `ShellInterop.Core`: shared process AppUserModelID and Win32 foundation.
 - `ShellInterop.JumpList`: Jump List Tasks publisher and Shell COM implementation; references Core.
+- `ShellInterop.Notifications`: Toast sender (Windows SDK .NET projection, no Windows App SDK) with read-only Start Menu shortcut inspection; does not reference Core or JumpList. See [Notifications](#notifications).
 
 > **Development split; not published on NuGet.org.** The existing Core version remains 0.1.0-preview.1; do not publish this breaking source tree under that old version. The split without separators passed real Shell regression in SHELL-SPLIT-02; separator display has not yet been verified in the real Shell.
 
@@ -22,6 +23,8 @@ For a future release, select and document a new preview version (for example `0.
 
 The library targets `net10.0-windows` only. A plain `net10.0` project cannot reference it (NU1201/NU1202). Cross-platform
 applications multi-target `net10.0;net10.0-windows` and reference the library only from the Windows target.
+
+`ShellInterop.Notifications` targets `net10.0-windows10.0.19041.0` (the Windows SDK .NET projection needs a versioned Windows TFM). A consuming project must target `net10.0-windows10.0.19041.0` or later: a plain `net10.0-windows` project gets NU1201 (observed in a scratch WPF check; an Avalonia consumer has not been built).
 
 ## Quick start
 
@@ -83,6 +86,44 @@ transaction to finish and release its objects, and for the STA worker to exit. `
 done (the Shell state is unknown), so keep the host open. `Dispose()` is a best-effort synchronous stop that never aborts
 the worker.
 
+## Notifications
+
+`ShellInterop.Notifications` sends a title + body toast and inspects whether an AUMID-bearing Start Menu shortcut exists. It never creates, edits, repairs or deletes shortcuts or registry values; your application provides the shortcut (carrying the same AUMID as `NotificationPublisherOptions.Aumid`) for its own deployment.
+
+```csharp
+using ShellInterop.Notifications;
+
+var publisher = new NotificationPublisher(new NotificationPublisherOptions { Aumid = "YourCompany.YourApp" });
+
+// A. Static, read-only check of the Start Menu shortcut (ShortcutFound / ShortcutNotFound / Unknown).
+NotificationRegistrationInspection registration = publisher.InspectRegistration(Environment.ProcessPath);
+
+// B. Windows notification setting (Unknown means "could not read", not "disabled").
+NotificationSettingState setting = publisher.GetSetting();
+
+// C. Submit the toast. Never throws for OS failures; check the result.
+NotificationSendResult sent = publisher.Send(new NotificationDefinition("Title", "Body"));
+Console.WriteLine($"registration={registration.State} setting={sent.Setting} submitted={sent.Submitted} hr=0x{sent.HResult:X8}");
+```
+
+Three independent facts, none of which guarantees that a toast is visible:
+
+| Fact | Where | Meaning |
+|---|---|---|
+| Submitted | `NotificationSendResult.Submitted` | The Windows send API call succeeded |
+| Setting | `NotificationSendResult.Setting` / `GetSetting()` | The Windows notification setting for the AUMID |
+| Registration | `InspectRegistration()` | Static Start Menu shortcut evidence only |
+
+Observed on Windows 11 (SHELL-NOTIF-02 / SHELL-NOTIF-04, dedicated VM):
+
+- **Registration propagation.** Right after a shortcut was registered, a toast sent about one second later returned `Submitted=True` and the inspection reported `ShortcutFound`, yet it was not seen on screen or in the Notification Center when checked about 4.5 minutes later (a brief display cannot be ruled out). The same toast re-sent later was displayed and kept in the Notification Center. A likely cause is a delay before Windows picks up the new AUMID registration; the cause and the required wait time have not been verified.
+- **After unregistering.** A toast sent right after the shortcut was removed was still displayed; after a guest restart it was not (with `Submitted=True` and `Setting=Enabled`). Immediate effect of unregistering is not guaranteed; whether a restart is required, or sign-out or time is enough, has not been verified.
+- `InspectRegistration` runs on its own short-lived STA thread (60 s limit) and allows one scan per process at a time. If a scan hangs, later inspections return `Unknown` (busy) instead of starting more threads; sending is not affected. Real-Windows behavior on a hung scan has not been verified.
+
+Not implemented: toast click activation (launching or restoring the app), COM activator registration, action buttons, notification history, replacing or removing toasts, automatic shortcut registration, automatic repair of the OS registration.
+
+Distribution: the Windows SDK .NET projection adds `Microsoft.Windows.SDK.NET.dll` and `WinRT.Runtime.dll` to the consuming application (about 25 MB in the PoC self-contained publish). This is not the Windows App SDK, and no Windows App SDK module was loaded in the real-Windows verification; behavior on a machine with no Windows App Runtime at all has not been verified. Third-party notice and license conditions for the projection are not yet reviewed and need a separate check before any public release.
+
 ## Project references and future packages
 
 For development, reference `src/ShellInterop.JumpList/ShellInterop.JumpList.csproj`. It transitively references Core; applications directly using Core APIs may reference Core explicitly. Future NuGet package IDs are `ShellInterop.Core` and `ShellInterop.JumpList`. Packaging and publication require a coordinated new version and have not been performed here.
@@ -94,6 +135,7 @@ For development, reference `src/ShellInterop.JumpList/ShellInterop.JumpList.cspr
 | Unit tests (fake Shell, in-memory COM objects, SDK-header cross-checks) | Included in `tests/ShellInterop.Core.Tests`. They never touch a Jump List. A pass is not a real-Shell result |
 | Real Shell, split assemblies without separators | SHELL-SPLIT-02: apply, navigation, RunItem, delete and re-register passed in the dedicated VM |
 | Real Shell, separator display | Not yet verified |
+| Notifications, real Windows 11 (SHELL-NOTIF-04, dedicated AUMID, VM) | Registration inspection (before / after / after removal), toast display and Notification Center retention passed; see [Notifications](#notifications) for the registration-propagation caveat |
 
 **Still unverified against the real Shell:** clearing with an empty Tasks list, separator display, and persistence after a restart. Delete, replacement, and task launching passed SHELL-SPLIT-02 for the launcher scenario.
 

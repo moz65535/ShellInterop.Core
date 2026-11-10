@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ShellInterop.Core\ShellInterop.Core.csproj" />
     <ProjectReference Include="..\..\src\ShellInterop.JumpList\ShellInterop.JumpList.csproj" />
+    <ProjectReference Include="..\..\src\ShellInterop.Notifications\ShellInterop.Notifications.csproj" />
   </ItemGroup>
 
 </Project>
