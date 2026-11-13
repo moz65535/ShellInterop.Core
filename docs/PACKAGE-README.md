@@ -4,7 +4,7 @@ Shared Windows Shell foundation: `ProcessAppIdentity` provides the process AppUs
 
 This source tree is an unpublished breaking split. Earlier Core packages included JumpList types; existing users can continue using the old package. New JumpList consumers must reference `ShellInterop.JumpList` and rebuild. The existing namespace remains `ShellInterop.Core.JumpLists`; binary compatibility is not guaranteed. Do not replace 0.1.0-preview.1 with this build. Review a coordinated new preview version and package dependencies before publishing.
 
-Tasks are supported by the new module. Separators are supported; custom categories (single and multiple) with removed-destination tracking are supported in `ShellInterop.JumpList`; Recent/Frequent are not implemented. The split without separators passed real Shell regression; separator display remains unverified.
+Tasks are supported by the new module. Separators are supported; custom categories (single and multiple) with removed-destination tracking are supported in `ShellInterop.JumpList`; Recent/Frequent are not implemented. Real Shell: the split passed regression without separators (SHELL-SPLIT-02); separators inside the `TasksFallback` block were confirmed with this library (SHELL-JL-07, conditional PASS), and a standalone test application using this library's public API confirmed separator display (SHELL-JL-02). Other layouts are unverified; see the repository README, including its notes on how many destinations the Shell displays.
 
 ## Development and AI Assistance
 
