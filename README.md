@@ -106,6 +106,18 @@ NotificationSendResult sent = publisher.Send(new NotificationDefinition("Title",
 Console.WriteLine($"registration={registration.State} setting={sent.Setting} submitted={sent.Submitted} hr=0x{sent.HResult:X8}");
 ```
 
+`NotificationDefinition.Silent` (default `false`) can be set with an object initializer, e.g. `new NotificationDefinition("Title", "Body") { Silent = true }`. When `true`, the toast XML carries `<audio silent="true"/>` to ask Windows for no notification sound; when `false` the XML is unchanged. Only the generated XML is unit-tested; actual silence on real Windows has not been verified.
+
+### LaunchUri (protocol activation)
+
+`NotificationDefinition.LaunchUri` (default `null`) is an optional absolute URI that Windows launches when the toast body is clicked: `new NotificationDefinition("Title", "Body") { LaunchUri = "my-app-x://activate?a=1" }`. When set, the toast XML gets `launch="<uri>"` and `activationType="protocol"` (the value is XML-escaped); when `null` the XML is unchanged. `Silent` and `LaunchUri` can be combined. Setting a value that is not a well-formed absolute URI, or that contains whitespace or control characters, throws `ArgumentException`. The library does not restrict URI schemes.
+
+- **The library only emits the URI.** It does not register the protocol, create the Start Menu shortcut, set the AUMID, or handle the click. Your application owns the protocol registration (for example under HKCU) and the code that runs when Windows starts it.
+- **Treat the received URI as untrusted input.** Any process can start a registered protocol with any argument; validate it in your application.
+- If the application is not running when the toast is clicked, Windows starts the registered protocol handler, so the handler must be able to start the app (or hand off to the running instance).
+
+Responsibilities, kept separate: the **Start Menu shortcut and AUMID** (app-provided; read-only inspection here), **protocol registration** (app-provided), **sending** (`NotificationPublisher.Send`, `Submitted` only means the Windows API call succeeded), **display by Windows** (not guaranteed; see below), and **launching or restoring the app on click** (app-side handler for the protocol URI).
+
 Three independent facts, none of which guarantees that a toast is visible:
 
 | Fact | Where | Meaning |
@@ -120,7 +132,7 @@ Observed on Windows 11 (SHELL-NOTIF-02 / SHELL-NOTIF-04, dedicated VM):
 - **After unregistering.** A toast sent right after the shortcut was removed was still displayed; after a guest restart it was not (with `Submitted=True` and `Setting=Enabled`). Immediate effect of unregistering is not guaranteed; whether a restart is required, or sign-out or time is enough, has not been verified.
 - `InspectRegistration` runs on its own short-lived STA thread (60 s limit) and allows one scan per process at a time. If a scan hangs, later inspections return `Unknown` (busy) instead of starting more threads; sending is not affected. Real-Windows behavior on a hung scan has not been verified.
 
-Not implemented: toast click activation (launching or restoring the app), COM activator registration, action buttons, notification history, replacing or removing toasts, automatic shortcut registration, automatic repair of the OS registration.
+Not implemented: handling the click itself (the library only emits `LaunchUri`; protocol registration and launching or restoring the app are the application's job), COM activator registration, action buttons, notification history, replacing or removing toasts, automatic shortcut registration, automatic repair of the OS registration.
 
 Distribution: the Windows SDK .NET projection adds `Microsoft.Windows.SDK.NET.dll` and `WinRT.Runtime.dll` to the consuming application (about 25 MB in the PoC self-contained publish). This is not the Windows App SDK, and no Windows App SDK module was loaded in the real-Windows verification; behavior on a machine with no Windows App Runtime at all has not been verified. Third-party notice and license conditions for the projection are not yet reviewed and need a separate check before any public release.
 
@@ -136,6 +148,7 @@ For development, reference `src/ShellInterop.JumpList/ShellInterop.JumpList.cspr
 | Real Shell, split assemblies without separators | SHELL-SPLIT-02: apply, navigation, RunItem, delete and re-register passed in the dedicated VM |
 | Real Shell, separator display | Not yet verified |
 | Notifications, real Windows 11 (SHELL-NOTIF-04, dedicated AUMID, VM) | Registration inspection (before / after / after removal), toast display and Notification Center retention passed; see [Notifications](#notifications) for the registration-propagation caveat |
+| Notifications with `Silent` and `LaunchUri`, real Windows 11 VM (SHELL-NOTIF-07-D-VERIFY): CONDITIONAL_PASS | Used by the AI Usage Tracker (framework-dependent build, .NET 10 Desktop Runtime, HKCU protocol registration, per-app Start Menu shortcut with AUMID). Confirmed: toast display; retention in the Notification Center; click restore while minimized; click restore from behind another window (2 times) and from the tray (hidden window, 1 time only); click start after the app had exited (2 times); no Windows App SDK module loaded; notifications turned off then on in Windows settings and recovered. Not verified or only partly verified: audible silence of `Silent`, some failure paths (shortcut or protocol conflicts, real send failures), machines without the Windows App Runtime, other Windows builds. This is one application on one VM, not a guarantee for other applications. Unit tests only check the generated XML |
 
 **Still unverified against the real Shell:** clearing with an empty Tasks list, separator display, and persistence after a restart. Delete, replacement, and task launching passed SHELL-SPLIT-02 for the launcher scenario.
 
