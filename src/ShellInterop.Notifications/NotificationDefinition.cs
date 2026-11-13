@@ -26,6 +26,37 @@ public sealed record NotificationDefinition
     /// <summary>Second text element of the toast. May contain line breaks; Windows may fold them.</summary>
     public string Body { get; }
 
+    /// <summary>
+    /// When true the toast asks Windows not to play the notification sound (<c>&lt;audio silent="true"/&gt;</c>).
+    /// Default false: the XML is unchanged and Windows plays its default sound. Real-Windows silence has not been verified.
+    /// </summary>
+    public bool Silent { get; init; }
+
+    private string? _launchUri;
+
+    /// <summary>
+    /// Optional absolute URI launched when the toast is clicked (<c>launch="uri" activationType="protocol"</c>).
+    /// Null (default): the toast XML is unchanged. The library only emits the URI; the application owns the protocol
+    /// registration and must treat the URI it receives as untrusted input.
+    /// </summary>
+    /// <exception cref="ArgumentException">Not a well-formed absolute URI, or contains whitespace/control characters.</exception>
+    public string? LaunchUri
+    {
+        get => _launchUri;
+        init => _launchUri = value is null ? null : ValidateLaunchUri(value);
+    }
+
+    private static string ValidateLaunchUri(string uri)
+    {
+        ValidateText(uri, nameof(LaunchUri));
+        foreach (char c in uri)
+            if (c <= 0x20 || c == 0x7F || char.IsWhiteSpace(c))
+                throw new ArgumentException($"{nameof(LaunchUri)} contains whitespace or a control character (U+{(int)c:X4}).", nameof(LaunchUri));
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsed) || !parsed.IsWellFormedOriginalString())
+            throw new ArgumentException($"{nameof(LaunchUri)} is not a well-formed absolute URI.", nameof(LaunchUri));
+        return uri;
+    }
+
     /// <summary>XML 1.0 Char: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF].</summary>
     internal static void ValidateText(string? text, string name)
     {
@@ -54,6 +85,12 @@ public sealed record NotificationDefinition
                 new XElement("binding", new XAttribute("template", "ToastGeneric"),
                     new XElement("text", Title),
                     new XElement("text", Body))));
+        if (LaunchUri is not null)
+        {
+            xml.Add(new XAttribute("launch", LaunchUri));
+            xml.Add(new XAttribute("activationType", "protocol"));
+        }
+        if (Silent) xml.Add(new XElement("audio", new XAttribute("silent", "true")));
         return xml.ToString(SaveOptions.DisableFormatting);
     }
 }

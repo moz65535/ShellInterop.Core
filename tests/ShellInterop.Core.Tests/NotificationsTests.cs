@@ -59,6 +59,69 @@ public class NotificationDefinitionTests
         var texts = doc.Descendants("text").Select(t => t.Value).ToArray();
         Assert.Equal(["T & <t>", "a \"b\" 'c' &amp; \U0001F680"], texts);
     }
+
+    [Fact]
+    public void SilentDefaultsToFalseAndXmlHasNoAudio()
+    {
+        var d = new NotificationDefinition("t", "b");
+        Assert.False(d.Silent);
+        Assert.Equal("<toast><visual><binding template=\"ToastGeneric\"><text>t</text><text>b</text></binding></visual></toast>",
+            d.ToToastXml());
+        Assert.DoesNotContain("audio", new NotificationDefinition("t", "b") { Silent = false }.ToToastXml());
+    }
+
+    [Fact]
+    public void SilentTrueAddsAudioSilentAndKeepsText()
+    {
+        var d = new NotificationDefinition("通知 & <t>", "日本語 \"q\"") { Silent = true };
+        var doc = System.Xml.Linq.XDocument.Parse(d.ToToastXml());
+        var audio = Assert.Single(doc.Root!.Elements("audio"));
+        Assert.Equal("true", audio.Attribute("silent")!.Value);
+        Assert.Equal(["通知 & <t>", "日本語 \"q\""], doc.Descendants("text").Select(t => t.Value).ToArray());
+    }
+
+    [Fact]
+    public void LaunchUriUnsetKeepsXmlUnchanged()
+    {
+        var d = new NotificationDefinition("t", "b");
+        Assert.Null(d.LaunchUri);
+        Assert.Equal("<toast><visual><binding template=\"ToastGeneric\"><text>t</text><text>b</text></binding></visual></toast>",
+            d.ToToastXml());
+    }
+
+    [Fact]
+    public void LaunchUriAddsLaunchAndProtocolActivation()
+    {
+        var d = new NotificationDefinition("t", "b") { LaunchUri = "my-app-x://activate?a=1&b=2" };
+        var root = System.Xml.Linq.XDocument.Parse(d.ToToastXml()).Root!;
+        Assert.Equal("my-app-x://activate?a=1&b=2", root.Attribute("launch")!.Value);
+        Assert.Equal("protocol", root.Attribute("activationType")!.Value);
+    }
+
+    [Fact]
+    public void LaunchUriIsXmlEscapedAndCoexistsWithSilent()
+    {
+        var d = new NotificationDefinition("t", "b") { LaunchUri = "x-app://h/p?q=a&r=1", Silent = true };
+        string xml = d.ToToastXml();
+        Assert.Contains("q=a&amp;r=1", xml);
+        var root = System.Xml.Linq.XDocument.Parse(xml).Root!;
+        Assert.Equal("x-app://h/p?q=a&r=1", root.Attribute("launch")!.Value);
+        Assert.Equal("true", root.Element("audio")!.Attribute("silent")!.Value);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("relative/path")]
+    [InlineData("1abc://x")]
+    [InlineData("my app://x")]
+    [InlineData("x-app://a b")]
+    [InlineData("x-app://a\nb")]
+    [InlineData("x-app://a\u0001b")]
+    [InlineData("://x")]
+    public void InvalidLaunchUriIsRejected(string uri)
+    {
+        Assert.Throws<ArgumentException>(() => new NotificationDefinition("t", "b") { LaunchUri = uri });
+    }
 }
 
 public class NotificationPublisherTests
