@@ -149,7 +149,7 @@ Four things that are easy to confuse:
 | Windows SDK .NET projection (`Microsoft.Windows.SDK.NET.dll`) | **Used.** Shipped with the consuming application |
 | `WinRT.Runtime.dll` (C#/WinRT) | Used, as part of the same projection package. Not the Windows App SDK |
 
-Licensing of these two DLLs (facts only, no legal conclusion): this repository ships only the MIT `LICENSE` and has no third-party notice file. The Tracker release ZIP ships `THIRD-PARTY-NOTICES.md` and the Microsoft Windows 10 SDK license text, and its notice cites Microsoft's Windows SDK redistribution list as naming both files; whether the redistribution conditions are met, and the public-release terms of `ShellInterop.Notifications` itself, have not been confirmed and must be decided before any public release.
+Licensing of these two DLLs (facts only, no legal conclusion): this repository ships only the MIT `LICENSE` and has no third-party notice file. The Tracker release ZIP ships `THIRD-PARTY-NOTICES.md` and the Microsoft Windows 10 SDK license text, and its notice cites Microsoft's Windows SDK redistribution list as naming both files; the source tree and the local nupkg files contain neither DLL (checked in SHELL-LEGAL-03 and SHELL-PACK-02/03), but an application that uses `ShellInterop.Notifications` ships them, so that application must meet Microsoft's redistribution conditions itself. Whether those conditions are met for the Tracker ZIP has not been confirmed. See [docs/PUBLICATION-CHECKLIST.md](docs/PUBLICATION-CHECKLIST.md).
 
 ## Project references and future packages
 
@@ -220,6 +220,8 @@ The tests use a fake Shell and never write a real Jump List. Some tests create i
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Structure of the library (Japanese) |
 | [docs/ERROR-MODEL.md](docs/ERROR-MODEL.md) | Result and error model (Japanese) |
 | [docs/API-CONTRACT-REVIEW.md](docs/API-CONTRACT-REVIEW.md) | How the COM declarations were checked against the Windows SDK headers (Japanese) |
+| [docs/COM-PROVENANCE.md](docs/COM-PROVENANCE.md) | Where the COM declarations come from, and what is still open (English) |
+| [docs/PUBLICATION-CHECKLIST.md](docs/PUBLICATION-CHECKLIST.md) | Checklist for GitHub, NuGet and application ZIP publication (English) |
 
 ## Development and AI Assistance
 
@@ -237,7 +239,13 @@ MIT License, Copyright (c) 2026 moz. See [LICENSE](LICENSE).
 
 Adopting MIT does not grant rights held by third parties. Two questions are still open and are not resolved by this
 license: the permission status of COM declarations (GUIDs, vtable layouts) derived from Windows SDK headers, and rights
-review of code produced with AI assistance.
+review of code produced with AI assistance. The sources of the COM declarations are recorded in
+[docs/COM-PROVENANCE.md](docs/COM-PROVENANCE.md); recording them does not settle the rights question.
+
+Publication readiness (GitHub source, NuGet, application ZIP) is tracked in
+[docs/PUBLICATION-CHECKLIST.md](docs/PUBLICATION-CHECKLIST.md). An inquiry to Microsoft is not a blanket precondition for
+publishing; it is optional when more certainty is wanted. Microsoft's license terms still apply wherever Microsoft files
+are redistributed, and none of this is legal advice or a clearance.
 
 ## Future design notes (not implemented)
 

@@ -4,7 +4,7 @@ using System.Text;
 namespace ShellInterop.Core.Interop;
 
 // Every GUID and every vtable slot below was checked against the Windows SDK 10.0.26100.0 headers
-// (ShObjIdl_core.h, ObjectArray.h, propsys.h, propkey.h). See docs/API-CONTRACT-REVIEW.md.
+// (ShObjIdl_core.h, ObjectArray.h, propsys.h, propkey.h). See docs/API-CONTRACT-REVIEW.md and docs/COM-PROVENANCE.md (sources, open rights questions).
 // Interfaces are classic [ComImport]; all methods are [PreserveSig] so HRESULTs are never turned into exceptions.
 
 internal static class ShellGuids
@@ -23,7 +23,7 @@ internal static class ShellGuids
 
     public static readonly PropertyKey PkeyIsDestListSeparator = new(new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), 6);
 
-    // PKEY_Title (System.Title): propkey.h DEFINE_PROPERTYKEY(PKEY_Title, F29F85E0-4FF9-1068-AB91-08002B27B3D9, 2)
+    // PKEY_Title (System.Title): same format ID and property ID as PKEY_Title in propkey.h (Windows SDK 10.0.26100.0).
     public static readonly PropertyKey PkeyTitle = new(new Guid("F29F85E0-4FF9-1068-AB91-08002B27B3D9"), 2);
 }
 

@@ -197,8 +197,13 @@ MIT を採用しても、第三者が持つ権利は与えられません。次�
 `Microsoft.Windows.SDK.NET.dll` と `WinRT.Runtime.dll` の再配布について（事実のみで、法的な結論ではありません）:
 
 - このリポジトリにあるのは MIT の `LICENSE` だけで、第三者通知のファイルはありません。
+- ソースツリーとローカルの nupkg には、どちらの DLL も含まれていません（SHELL-LEGAL-03、SHELL-PACK-02/03 で確認）。ただし `ShellInterop.Notifications` を使うアプリは、この 2 ファイルを同梱して配布することになるため、そのアプリが Microsoft の再配布条件を自分で満たす必要があります。
 - Tracker のリリース ZIP には `THIRD-PARTY-NOTICES.md` と Microsoft の Windows 10 SDK のライセンス文が同梱され、その通知は Microsoft の Windows SDK 再配布リストがこの 2 ファイルを挙げていると記載しています。
-- 再配布条件を満たしているか、`ShellInterop.Notifications` 自体の公開条件、NuGet 依存の再監査は **確認できていません**。公開前に決める必要があります。
+- Tracker ZIP について再配布条件を満たしているかは **確認できていません**。詳しくは [docs/PUBLICATION-CHECKLIST.md](docs/PUBLICATION-CHECKLIST.md)（英語）を参照してください。
+
+COM 宣言の出典（Windows SDK のどのヘッダー由来か、独自実装との区別、未確定の点）は [docs/COM-PROVENANCE.md](docs/COM-PROVENANCE.md)（英語）に記録しています。出典を記録しても、権利関係が解決したことにはなりません。
+
+公開準備の状況（GitHub のソース、NuGet、アプリの ZIP）は [docs/PUBLICATION-CHECKLIST.md](docs/PUBLICATION-CHECKLIST.md) にまとめています。Microsoft への問い合わせは、公開の一律の必須条件ではありません（確実性を高めたいときの任意の手段です）。ただし、Microsoft のファイルを再配布する場合は Microsoft のライセンス条件が適用され、これは法的助言でも許可でもありません。
 
 ドキュメント整備の完了は、ライセンス問題の解決を意味しません。
 
@@ -212,6 +217,8 @@ MIT を採用しても、第三者が持つ権利は与えられません。次�
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | ライブラリの構造 | 日本語 |
 | [docs/ERROR-MODEL.md](docs/ERROR-MODEL.md) | 結果とエラーのモデル | 日本語 |
 | [docs/API-CONTRACT-REVIEW.md](docs/API-CONTRACT-REVIEW.md) | COM 宣言を Windows SDK ヘッダーと照合した記録 | 日本語 |
+| [docs/COM-PROVENANCE.md](docs/COM-PROVENANCE.md) | COM 宣言の出典と、未確定の点 | 英語 |
+| [docs/PUBLICATION-CHECKLIST.md](docs/PUBLICATION-CHECKLIST.md) | GitHub・NuGet・アプリ ZIP の公開前チェックリスト | 英語 |
 | [docs/DOCS-MAP.md](docs/DOCS-MAP.md) | 日英文書の対応と、仕様変更時に一緒に更新するもの | 日本語・英語 |
 | [docs/JUMPLIST-PACKAGE-README.md](docs/JUMPLIST-PACKAGE-README.md)、[docs/PACKAGE-README.md](docs/PACKAGE-README.md) | パッケージ用 README | 英語 |
 
