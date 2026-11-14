@@ -8,7 +8,7 @@ Three Windows-only, UI-framework-independent .NET libraries:
 - `ShellInterop.JumpList`: Jump List Tasks publisher and Shell COM implementation; references Core.
 - `ShellInterop.Notifications`: Toast sender (Windows SDK .NET projection, no Windows App SDK) with read-only Start Menu shortcut inspection; does not reference Core or JumpList. See [Notifications](#notifications).
 
-> **Development split; not published on NuGet.org.** The source tree now carries Core `0.2.0-preview.1` and JumpList `0.2.0-preview.1` (planned publication versions; the old Core `0.1.0-preview.1` must not be overwritten by this breaking tree) and Notifications `0.1.0-preview.1`. As of SHELL-PACK-02 no `ShellInterop.*` package ID was found on NuGet.org. The split passed real Shell regression in SHELL-SPLIT-02. Separators, custom categories and removed-destination tracking have since been checked on the real Shell under limited conditions; see [Verification status](#verification-status).
+> **Pre-release split.** The source tree carries Core `0.2.0-preview.1` and JumpList `0.2.0-preview.1` (a breaking split of the earlier Core code; earlier internal Core builds numbered `0.1.0-preview.1` were never published on NuGet.org) and Notifications `0.1.0-preview.1`. The split passed real Shell regression in SHELL-SPLIT-02. Separators, custom categories and removed-destination tracking have since been checked on the real Shell under limited conditions; see [Verification status](#verification-status).
 
 These libraries are independently developed and are not Microsoft products.
 
@@ -16,7 +16,7 @@ These libraries are independently developed and are not Microsoft products.
 
 Earlier `ShellInterop.Core` contained the JumpList API. The split moves its public types into the `ShellInterop.JumpList` assembly. The namespace `ShellInterop.Core.JumpLists` and existing method signatures remain unchanged. Add a reference to `ShellInterop.JumpList` (and Core when using `ProcessAppIdentity`), then rebuild. A Core-only reference no longer supplies JumpList types; binary compatibility with existing compiled consumers is not guaranteed. No type forwarders are provided. Existing users may continue using the old Core release or old local package.
 
-The coordinated packages are set to `0.2.0-preview.1` in the project files; this is the planned number, not a release. Independently review package metadata, dependency versions, XML documentation, and license/third-party rights before publishing.
+Core and JumpList are versioned independently but currently share the number `0.2.0-preview.1`; Notifications is `0.1.0-preview.1`. All three are pre-releases.
 
 ## Requirements
 
@@ -151,9 +151,9 @@ Four things that are easy to confuse:
 
 Licensing of these two DLLs (facts only, no legal conclusion): this repository ships only the MIT `LICENSE` and has no third-party notice file. The Tracker release ZIP ships `THIRD-PARTY-NOTICES.md` and the Microsoft Windows 10 SDK license text, and its notice cites Microsoft's Windows SDK redistribution list as naming both files; the source tree and the local nupkg files contain neither DLL (checked in SHELL-LEGAL-03 and SHELL-PACK-02/03), but an application that uses `ShellInterop.Notifications` ships them, so that application must meet Microsoft's redistribution conditions itself. Whether those conditions are met for the Tracker ZIP has not been confirmed. See [docs/PUBLICATION-CHECKLIST.md](docs/PUBLICATION-CHECKLIST.md).
 
-## Project references and future packages
+## Project references and packages
 
-For development, reference `src/ShellInterop.JumpList/ShellInterop.JumpList.csproj`. It transitively references Core; applications directly using Core APIs may reference Core explicitly. Future NuGet package IDs are `ShellInterop.Core` and `ShellInterop.JumpList`. Core and JumpList are versioned `0.2.0-preview.1` (JumpList's NuGet dependency is `ShellInterop.Core >= 0.2.0-preview.1`). `ShellInterop.Notifications` is an independent package at `0.1.0-preview.1` with its own package README and the LICENSE packed. All three have been packed locally in isolation (SHELL-PACK-01/02), and a minimal consumer restored and built them from a local feed; none is published on NuGet.org. A local pack success is neither a publication approval nor a legal clearance, and publishing a package is separate from distributing an application that uses it (see the licensing notes above).
+For development, reference `src/ShellInterop.JumpList/ShellInterop.JumpList.csproj`. It transitively references Core; applications directly using Core APIs may reference Core explicitly. The NuGet package IDs are `ShellInterop.Core`, `ShellInterop.JumpList` and `ShellInterop.Notifications`. Core and JumpList are versioned `0.2.0-preview.1` (JumpList's NuGet dependency is `ShellInterop.Core >= 0.2.0-preview.1`). `ShellInterop.Notifications` is an independent package at `0.1.0-preview.1` with its own package README and the LICENSE packed. All three have been packed locally in isolation (SHELL-PACK-01/02), and a minimal consumer restored and built them from a local feed. Publishing a package is not a legal clearance, and is separate from distributing an application that uses it (see the licensing notes above).
 
 ## Verification status
 

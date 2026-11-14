@@ -16,7 +16,7 @@ It never creates, edits, repairs or deletes shortcuts or registry values. Your a
 dotnet add package ShellInterop.Notifications --prerelease
 ```
 
-(Applies once the package is published; this package is a pre-release and has not been published yet.)
+(This package is a pre-release, so `--prerelease` is required.)
 
 ## Minimal example
 
@@ -97,7 +97,7 @@ Audible silence of `Silent`; failure injection (shortcut or protocol conflicts, 
 
 ## Not the Windows App SDK; what your app ships
 
-This library does not use the Windows App SDK (`AppNotificationManager`, native bridge DLLs). It uses the Windows SDK .NET projection, so an application using it ships `Microsoft.Windows.SDK.NET.dll` and `WinRT.Runtime.dll` (C#/WinRT) with its own publish output. Whether this NuGet package itself contains these files is a separate question from what the consuming application's publish output contains. The redistribution terms for these Microsoft components, the publication terms of this package, and third-party notices are **not yet confirmed** and must be decided before any public release; this README makes no legal statement.
+This library does not use the Windows App SDK (`AppNotificationManager`, native bridge DLLs). It uses the Windows SDK .NET projection, so an application using it ships `Microsoft.Windows.SDK.NET.dll` and `WinRT.Runtime.dll` (C#/WinRT) with its own publish output. Whether this NuGet package itself contains these files is a separate question from what the consuming application's publish output contains. The redistribution terms for these Microsoft components, the publication terms of this package, and third-party notices are **not confirmed**; this README makes no legal statement.
 
 ## License
 
@@ -107,4 +107,4 @@ Adopting MIT does not grant rights held by third parties. Two questions remain o
 
 ## More documentation
 
-Full documentation, including Japanese guides, is in the source repository: <https://github.com/moz65535/ShellInterop.Core> (the repository README's "Notifications" and "Verification status" sections, and `docs/ja/NOTIFICATIONS.md`). Links to files that are not yet pushed will work only after they are published there.
+Full documentation, including Japanese guides, is in the source repository: <https://github.com/moz65535/ShellInterop.Core> (the repository README's "Notifications" and "Verification status" sections, and `docs/ja/NOTIFICATIONS.md`).
