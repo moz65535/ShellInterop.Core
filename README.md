@@ -222,6 +222,7 @@ The tests use a fake Shell and never write a real Jump List. Some tests create i
 | [docs/API-CONTRACT-REVIEW.md](docs/API-CONTRACT-REVIEW.md) | How the COM declarations were checked against the Windows SDK headers (Japanese) |
 | [docs/COM-PROVENANCE.md](docs/COM-PROVENANCE.md) | Where the COM declarations come from, and what is still open (English) |
 | [docs/PUBLICATION-CHECKLIST.md](docs/PUBLICATION-CHECKLIST.md) | Checklist for GitHub, NuGet and application ZIP publication (English) |
+| [docs/VERSIONING.md](docs/VERSIONING.md) | Independent per-package versioning policy (English) |
 
 ## Development and AI Assistance
 

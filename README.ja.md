@@ -219,6 +219,7 @@ COM 宣言の出典（Windows SDK のどのヘッダー由来か、独自実装�
 | [docs/API-CONTRACT-REVIEW.md](docs/API-CONTRACT-REVIEW.md) | COM 宣言を Windows SDK ヘッダーと照合した記録 | 日本語 |
 | [docs/COM-PROVENANCE.md](docs/COM-PROVENANCE.md) | COM 宣言の出典と、未確定の点 | 英語 |
 | [docs/PUBLICATION-CHECKLIST.md](docs/PUBLICATION-CHECKLIST.md) | GitHub・NuGet・アプリ ZIP の公開前チェックリスト | 英語 |
+| [docs/VERSIONING.md](docs/VERSIONING.md) | パッケージ単位の独立バージョン管理方針 | 英語 |
 | [docs/DOCS-MAP.md](docs/DOCS-MAP.md) | 日英文書の対応と、仕様変更時に一緒に更新するもの | 日本語・英語 |
 | [docs/JUMPLIST-PACKAGE-README.md](docs/JUMPLIST-PACKAGE-README.md)、[docs/PACKAGE-README.md](docs/PACKAGE-README.md) | パッケージ用 README | 英語 |
 

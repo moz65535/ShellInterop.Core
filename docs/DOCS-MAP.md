@@ -16,6 +16,7 @@ English: which English and Japanese documents correspond, and what to update tog
 | 構造・結果モデル・COM 宣言の確認 | （英語版なし） | [ARCHITECTURE.md](ARCHITECTURE.md)、[ERROR-MODEL.md](ERROR-MODEL.md)、[API-CONTRACT-REVIEW.md](API-CONTRACT-REVIEW.md) |
 | ライセンス | [LICENSE](../LICENSE)（正式文面は英語のみ） | README.ja.md に現状を記載 |
 | COM 宣言の出典・公開前チェックリスト | [COM-PROVENANCE.md](COM-PROVENANCE.md)、[PUBLICATION-CHECKLIST.md](PUBLICATION-CHECKLIST.md) | （日本語版なし。README.ja.md の 9 章で要点を記載） |
+| パッケージ単位の独立バージョン管理方針 | [VERSIONING.md](VERSIONING.md) | （日本語版なし。README.ja.md の 10 章から案内） |
 
 ## 一緒に更新するもの
 
