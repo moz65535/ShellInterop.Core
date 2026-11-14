@@ -19,7 +19,7 @@ caller (Avalonia / WPF / console)  ──await──►  IJumpListPublisher (pub
                                        └─ FakeShell (tests only)
 ```
 
-- **公開 API**: `IJumpListPublisher`（`ApplyAsync`, `DeleteListAsync`）、`JumpListDefinition`、`JumpTaskDefinition`、`JumpListApplyResult`、`JumpListPublisherOptions`、`JumpListValidator`、`ProcessAppIdentity`。COM 型は一切公開しない。
+- **公開 API**: `IJumpListPublisher`（`ApplyAsync`, `DeleteListAsync`, `ShutdownAsync`, `State`）、`JumpListPublisher`、`JumpListDefinition`（`FromEntries` / `FromEntriesWithCategories`）、`JumpListEntry`、`JumpTaskDefinition`、`JumpCategoryDefinition` / `JumpDestinationDefinition` / `JumpRemovedDestinationTracking`（カスタムカテゴリと削除済み宛先の追跡）、`JumpListApplyResult`、`JumpListPublisherOptions`、`JumpListValidator`、`ProcessAppIdentity`。COM 型は一切公開しない。`ShellInterop.Notifications`（Toast 送信。Core / JumpList を参照しない別アセンブリ）は本書の対象外で、README と docs/ja/NOTIFICATIONS.md を参照。
 - **UI 非依存**: Dispatcher を受け取らない。呼び出し側は任意のスレッドから `await` するだけ。完了継続は `RunContinuationsAsynchronously`。
 - **STA 境界**: ワーカーは `ApartmentState.STA` の専用バックグラウンドスレッド。COM オブジェクトは 1 リクエストの間だけ生存し、リクエスト終了時に同スレッドで解放する。スレッド間で COM オブジェクトを渡さない。
   ワーカーはメッセージポンプを持たないが、リクエスト間で COM オブジェクトを保持しないためクロスアパートメント呼び出しの待ちは発生しない設計。

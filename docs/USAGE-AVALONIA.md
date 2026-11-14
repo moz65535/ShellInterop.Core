@@ -5,15 +5,15 @@ ShellInterop.Core は Avalonia 専用ではなく、WPF など他の .NET アプ
 
 この文書のコードは、公開型・公開コンストラクタ・公開メソッドだけで書かれ、`WindowsOnly`（`net10.0-windows`）と `CrossPlat`（`net10.0;net10.0-windows`）の
 2 構成でビルド（`dotnet build` のみ。起動も実 Shell 操作もしていない）して警告 0・エラー 0 を確認済み。実行時の挙動は、単体テスト（フェイク Shell）と
-隔離された Windows 検証環境での Tasks 2 件の登録 1 回の実機確認（後述）の範囲でしか確認していない。
+隔離された Windows 検証環境での実機確認（0 章と README の Verification status）の範囲でしか確認していない。
 
-> 以下の既存ビルド・実 Shell 検証結果は分離前の証拠です。分離後の実 Shell 検証は未実施です。
+> この文書のビルド確認と最初の実 Shell 確認は分離前の記録です。分離後の実 Shell 検証は SHELL-SPLIT-02（apply・操作・RunItem・delete・再登録、検証用 VM）で通過しています。最新の検証状態は README の Verification status を参照してください。
 
 ## 0. 先に知っておくこと
 
-- 実 Shell で確認済みなのは、検証用ホストによる **Tasks 2 件の登録（ApplyAsync 1 回）** だけ（ゲスト VM 上）。
-- 実 Shell **未検証**: 空 Tasks による消去、`DeleteListAsync`、別 Tasks セットへの置換、Jump List タスクからのアプリ起動、再起動後の永続性。
-- 扱えるのは Tasks のみ。区切り線は実装済みだが実 Shell 表示は未検証。カスタムカテゴリ（単一・複数）は ShellInterop.JumpList で実装済み（本書では扱わない。詳細は docs/JUMPLIST-PACKAGE-README.md）。Recent/Frequent は未実装。
+- この文書のサンプルに近い範囲で最初に実 Shell で確認したのは、検証用ホストによる **Tasks 2 件の登録（ApplyAsync 1 回）**（ゲスト VM 上）。その後の実 Shell 検証は README を参照。
+- 実 Shell **未検証**（README 基準）: 空 Tasks による消去、OS 再起動後の永続性、ピン留め項目との組み合わせ、他の Windows ビルド。`DeleteListAsync`・別 Tasks セットへの置換・タスクからのアプリ起動は、SHELL-SPLIT-02 のランチャー想定（検証用 VM）で通過している。
+- 扱えるのは Tasks のみ。区切り線は実装済みで、実 Shell での表示は SHELL-JL-02 と SHELL-JL-07 で確認済み（それ以外の配置は未検証）。カスタムカテゴリ（単一・複数）は ShellInterop.JumpList で実装済み（本書では扱わない。詳細は docs/JUMPLIST-PACKAGE-README.md）。Recent/Frequent は未実装。
 - `JumpListApplyResult.ShellState == Applied` は **Shell API が成功を返した**という意味で、タスクバーでの表示を確認したという意味ではない（`VisuallyConfirmed` は常に false）。
 
 ## 1. 前提
@@ -279,11 +279,11 @@ public class App : Application
 // Replace the Tasks with an empty list (clear). Not yet verified against the real Shell.
 await publisher.ApplyAsync(new JumpListDefinition(appId, []));
 
-// Remove the whole custom Jump List of an AppUserModelID (cleanup/uninstall only). Not yet verified against the real Shell.
+// Remove the whole custom Jump List of an AppUserModelID (cleanup/uninstall only). Real Shell: delete passed SHELL-SPLIT-02 (launcher scenario).
 await publisher.DeleteListAsync(appId);
 ```
 
-どちらも単体テスト（フェイク Shell）でのみ確認済みで、実 Shell では未検証。
+空 Tasks による消去は単体テスト（フェイク Shell）のみで、実 Shell では未検証。`DeleteListAsync` は SHELL-SPLIT-02（ランチャー想定、検証用 VM）で実 Shell でも通過している。
 
 ## 6. 終了処理
 

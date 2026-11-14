@@ -1,5 +1,7 @@
 # ERROR-MODEL
 
+> 注: 本書の表と「実 Shell での確認は未実施」という記述は初期の Tasks 中心モデルの時点のものです。カスタムカテゴリ関連の結果（`RemovedDestinationsPending`、`CategorySkipped` など）は docs/JUMPLIST-PACKAGE-README.md と docs/ja/JUMPLIST.md、最新の実 Shell 検証状態は README の Verification status を参照してください。ここでの「未実施」を現在の状態として読まないでください。
+
 `JumpListApplyResult` = Status + FailurePhase + HResult + RequestedTaskCount + ShellState (+ Error / PrecedingError / ValidationErrors / Diagnostics / QueueWait / Elapsed)。
 `VisuallyConfirmed` は常に false（ライブラリはタスクバーを観測できない）。
 

@@ -1,5 +1,7 @@
 # API-CONTRACT-REVIEW
 
+> 注: 本書は 2026-10-24 時点の調査記録で、第 3 章の「実 Shell で未実施」は当時の状態です。その後 `DeleteListAsync`（ランチャー想定）は SHELL-SPLIT-02 で、`E_ACCESSDENIED` 時の `AbortList` と再 `BeginList` などは SHELL-JL-07 / JL-08 で実 Shell 確認が行われました。空 Tasks による消去、既存ピンとの関係などは今も未検証です。現在の状態は README の Verification status を参照してください。
+
 確認日: 2026-10-24。根拠は (1) Windows SDK 10.0.26100.0 のヘッダ実物、(2) Microsoft Learn 公式ページ。推測で記述した値はない。
 
 ## 1. 確認した定義（GUID・メソッド順序）
