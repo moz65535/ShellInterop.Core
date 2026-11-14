@@ -8,7 +8,7 @@ Windows 専用で UI フレームワークに依存しない、3 つの .NET ラ
 - `ShellInterop.JumpList`: ジャンプリスト（Tasks、カスタムカテゴリ）の公開と Shell COM の実装。Core を参照します。
 - `ShellInterop.Notifications`: Toast 通知の送信（Windows SDK .NET 投影を使用し、Windows App SDK は使いません）と、スタートメニューのショートカットの読み取り専用検査。Core / JumpList は参照しません。
 
-> **開発中の分割版で、NuGet.org では公開していません。** 既存の Core のバージョンは 0.1.0-preview.1 のままです。この破壊的な分割版を、同じ古いバージョン番号で公開してはいけません。
+> **開発中の分割版で、NuGet.org では公開していません。** ソースツリーの版は Core / JumpList が 0.2.0-preview.1（公開時の予定版）、Notifications が 0.1.0-preview.1 です。旧 Core の 0.1.0-preview.1 をこの破壊的な分割版で上書きしてはいけません。SHELL-PACK-02 時点で NuGet.org に `ShellInterop.*` のパッケージ ID は見つかっていません。
 > 英語版 README が公開上の主な入口で、この文書は日本語の利用者・保守者向けの対応文書です。内容は英語版と矛盾しないようにしますが、逐語訳ではありません。API 名・コード・識別子は原文のままです。
 
 これらのライブラリは独自に開発されたもので、Microsoft の製品ではありません。
@@ -36,9 +36,9 @@ dotnet test ShellInterop.Core.sln -c Release
 - ジャンプリスト: `src/ShellInterop.JumpList/ShellInterop.JumpList.csproj`（Core を推移的に参照。`ProcessAppIdentity` を直接使うなら Core も明示的に参照してよい）。
 - 通知: `src/ShellInterop.Notifications/ShellInterop.Notifications.csproj`。
 
-NuGet パッケージの予定 ID は `ShellInterop.Core` と `ShellInterop.JumpList` で、公開には連携した新バージョンが必要です（未実施）。`ShellInterop.Notifications` もパッケージ ID を宣言していますが、パッケージ用 README と LICENSE の同梱がなく、パッケージ化の確認も未実施です。
+NuGet パッケージの予定 ID は `ShellInterop.Core` と `ShellInterop.JumpList` で、Core と JumpList は 0.2.0-preview.1 です（JumpList は `ShellInterop.Core >= 0.2.0-preview.1` に依存）。`ShellInterop.Notifications` は 0.1.0-preview.1 の独立パッケージで、パッケージ用 README と LICENSE を同梱します。3 つとも隔離環境でローカル pack を確認していますが、NuGet.org では未公開です。ローカル pack の成功は公開許可でも法的承認でもなく、NuGet パッケージの公開と、それを使うアプリの配布は別の問題です。
 
-JumpList プロジェクトを 0.1.0-preview.1 のまま pack することは止めてあります（古い Core パッケージには分割後に必要な内部型がないため）。ローカルのパッケージ試験では、両プロジェクトに連携したバージョン（例: `-p:Version=0.2.0-local.1`）を渡します。その試験版は公開しないでください。
+JumpList プロジェクトを旧 0.1.0-preview.1 のまま pack することはガードで止めてあります（古い Core には分割後に必要な内部型がないため）。現在の 0.2.0-preview.1 は両プロジェクトとも pack できます。他の版をローカル試験する場合は両プロジェクトに同じ `-p:Version=...` を渡し、その試験版は公開しないでください。
 
 旧 `ShellInterop.Core` はジャンプリスト API を含んでいました。分割で公開型は `ShellInterop.JumpList` アセンブリに移りましたが、名前空間 `ShellInterop.Core.JumpLists` とメソッドシグネチャは変わりません。移行時は `ShellInterop.JumpList`（と、`ProcessAppIdentity` を使うなら Core）への参照を追加して再ビルドします。型フォワーダーはなく、コンパイル済みの既存利用側とのバイナリ互換は保証しません。
 

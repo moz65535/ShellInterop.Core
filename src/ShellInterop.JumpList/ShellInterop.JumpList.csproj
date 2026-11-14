@@ -7,10 +7,17 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DeterministicSourcePaths>true</DeterministicSourcePaths>
     <PackageId>ShellInterop.JumpList</PackageId>
-    <Version>0.1.0-preview.1</Version>
+    <Version>0.2.0-preview.1</Version>
     <Authors>moz</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Windows Jump List Tasks publisher and Shell COM interop. Pre-release; not a Microsoft product.</Description>
+    <!-- NuGet metadata (same conventions as ShellInterop.Core / ShellInterop.Notifications). Signing is not set. -->
+    <RepositoryUrl>https://github.com/moz65535/ShellInterop.Core</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/moz65535/ShellInterop.Core</PackageProjectUrl>
+    <Product>ShellInterop.JumpList</Product>
+    <Copyright>Copyright (c) 2026 moz</Copyright>
+    <PackageTags>jumplist;jump-list;taskbar;windows;shell</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <PackageReadmeFile>README.md</PackageReadmeFile>

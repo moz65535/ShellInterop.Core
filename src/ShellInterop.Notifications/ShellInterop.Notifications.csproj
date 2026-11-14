@@ -15,8 +15,19 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Windows Toast sender (Windows SDK .NET projection, no Windows App SDK) with read-only AUMID shortcut inspection. Pre-release; not a Microsoft product.</Description>
     <!-- Intentionally NO UseWPF / UseWindowsForms / Windows App SDK PackageReference. -->
+    <!-- NuGet metadata (same conventions as ShellInterop.Core). Signing is not set. -->
+    <RepositoryUrl>https://github.com/moz65535/ShellInterop.Core</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/moz65535/ShellInterop.Core</PackageProjectUrl>
+    <Product>ShellInterop.Notifications</Product>
+    <Copyright>Copyright (c) 2026 moz</Copyright>
+    <PackageTags>notification;toast;windows;shell;appusermodelid;aumid</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="ShellInterop.Core.Tests" />
+    <!-- Package-specific README (the repository README links to files that do not exist inside the package). -->
+    <None Include="..\..\docs\NOTIFICATIONS-PACKAGE-README.md" Pack="true" PackagePath="README.md" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

@@ -7,7 +7,8 @@
     <!-- Required only by the LibraryImport source generator. No hand-written unsafe code. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Version>0.1.0-preview.1</Version>
+    <!-- 0.1.0-preview.1 (old Core, included JumpList types) may already be published; this split is a breaking change, so use a new coordinated version. -->
+    <Version>0.2.0-preview.1</Version>
     <!-- Maps source paths to /_/ so the PDB path embedded in the DLL does not contain the local directory. -->
     <DeterministicSourcePaths>true</DeterministicSourcePaths>
     <!-- Intentionally NO UseWPF / UseWindowsForms / PackageReference: Core depends on the BCL and Windows COM only. -->
