@@ -33,7 +33,7 @@ public static class ProcessAppIdentity
     /// <c>AppId.InvalidFormat</c> or <c>AppId.NotAllowed</c>). The Shell is not called in this case.
     /// </exception>
     /// <remarks>
-    /// Call this once during application startup, before any window is created or any Jump List operation is performed.
+    /// Call this during application startup, before any window is created or any Jump List operation is performed.
     /// Calling it affects the whole process.
     /// </remarks>
     public static int Set(string appId, Predicate<string>? allowed = null)
