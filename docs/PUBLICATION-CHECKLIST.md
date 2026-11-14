@@ -1,6 +1,6 @@
 # Publication checklist
 
-A working checklist for three separate publication actions. Nothing here is a legal clearance, and completing a list does not settle the open rights questions. Nothing has been published yet.
+A working checklist for three separate publication actions. Nothing here is a legal clearance, and completing a list does not settle the open rights questions. Current status: the GitHub repository is already public and part of the `main` history is already published; local commits that are not yet pushed are not public. The NuGet packages and the Tracker ZIP have not been published.
 
 Three questions are kept apart on purpose:
 
@@ -16,8 +16,12 @@ Three questions are kept apart on purpose:
 - COM declaration sources are recorded in [COM-PROVENANCE.md](COM-PROVENANCE.md).
 - AI-assisted development is disclosed in the README.
 
+**Current state**
+- The GitHub repository is already public, so no visibility change is needed.
+- Part of the `main` history is already published. Local commits that have not been pushed are not yet public; pushing them is a separate step.
+
 **Not done**
-- Push to a public remote, repository visibility change, release or tag.
+- Pushing the unpushed local commits, creating a release or tag.
 
 **Final checks before publishing**
 - `git ls-files` still shows no `dll`, `nupkg`, `zip`, `exe`, `h`, `idl`, `winmd`.

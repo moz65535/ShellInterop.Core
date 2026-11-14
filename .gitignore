@@ -11,6 +11,7 @@ TestResults/
 *.binlog
 logs/
 *.log
+*.stackdump
 
 # IDE / personal settings
 .vs/
