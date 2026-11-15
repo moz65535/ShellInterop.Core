@@ -36,7 +36,7 @@ dotnet test ShellInterop.Core.sln -c Release
 - ジャンプリスト: `src/ShellInterop.JumpList/ShellInterop.JumpList.csproj`（Core を推移的に参照。`ProcessAppIdentity` を直接使うなら Core も明示的に参照してよい）。
 - 通知: `src/ShellInterop.Notifications/ShellInterop.Notifications.csproj`。
 
-NuGet パッケージ ID は `ShellInterop.Core`、`ShellInterop.JumpList`、`ShellInterop.Notifications` で、Core と JumpList は 0.2.0-preview.1 です（JumpList は `ShellInterop.Core >= 0.2.0-preview.1` に依存）。`ShellInterop.Notifications` は 0.1.0-preview.1 の独立パッケージで、パッケージ用 README と LICENSE を同梱します。3 つとも隔離環境でローカル pack を確認しています。NuGet パッケージの公開は法的承認ではなく、公開と、それを使うアプリの配布は別の問題です。
+NuGet パッケージ ID は `ShellInterop.Core`、`ShellInterop.JumpList`、`ShellInterop.Notifications` で、Core と JumpList は 0.2.0-preview.1 です（JumpList は `ShellInterop.Core >= 0.2.0-preview.1` に依存）。`ShellInterop.Notifications` は 0.1.0-preview.1 の独立パッケージで、パッケージ用 README と LICENSE を同梱します。3 つとも 2026-11-15 に NuGet.org でプレリリース版として公開済みです（[Core](https://www.nuget.org/packages/ShellInterop.Core/0.2.0-preview.1)、[JumpList](https://www.nuget.org/packages/ShellInterop.JumpList/0.2.0-preview.1)、[Notifications](https://www.nuget.org/packages/ShellInterop.Notifications/0.1.0-preview.1)）。公式フィードからの restore と最小 Consumer の Release ビルドも成功しています（SHELL-NUGET-05）。それ以前は隔離環境でローカル pack を確認していました。NuGet パッケージの公開は法的承認ではなく、公開と、それを使うアプリの配布は別の問題です。
 
 JumpList プロジェクトを旧 0.1.0-preview.1 のまま pack することはガードで止めてあります（古い Core には分割後に必要な内部型がないため）。現在の 0.2.0-preview.1 は両プロジェクトとも pack できます。他の版をローカル試験する場合は両プロジェクトに同じ `-p:Version=...` を渡し、その試験版は公開しないでください。
 

@@ -102,4 +102,4 @@ Windows App SDK の通知コンポーネントには依存していません。�
 | Windows SDK .NET 投影（`Microsoft.Windows.SDK.NET.dll`） | 使う。利用側アプリに同梱される（PoC の self-contained 発行で約 25 MB） |
 | `WinRT.Runtime.dll`（C#/WinRT） | 同じ投影パッケージの一部として使う。Windows App SDK ではない |
 
-このライブラリを使うアプリは、`Microsoft.Windows.SDK.NET.dll` と `WinRT.Runtime.dll` を同梱することになります。これらの再配布条件、`ShellInterop.Notifications` 自体の公開条件、第三者通知の整備は **未確認で、公開前に決める必要があります**（法的な結論はここでは出しません）。詳しくは README.ja.md の「ライセンスと再配布の現状」を参照してください。
+このライブラリを使うアプリは、`Microsoft.Windows.SDK.NET.dll` と `WinRT.Runtime.dll` を同梱することになります。これらの再配布条件、`ShellInterop.Notifications` 自体の公開条件（パッケージは 2026-11-15 に NuGet.org で公開済みですが、これは法的確認の完了ではありません）、第三者通知の整備は **未確認で、アプリを配布する前に決める必要があります**（法的な結論はここでは出しません）。詳しくは README.ja.md の「ライセンスと再配布の現状」を参照してください。

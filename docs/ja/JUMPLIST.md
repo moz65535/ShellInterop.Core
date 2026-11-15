@@ -4,7 +4,7 @@
 この文書は同じ内容を日本語で読めるようにしたもので、新しい仕様や保証を加えるものではありません。食い違いがあれば、英語版・ソース・README の Verification status を確認してください。
 基本的な使い方（Avalonia のサンプル、終了処理）は [../USAGE-AVALONIA.md](../USAGE-AVALONIA.md) にあります。
 
-`ShellInterop.JumpList` は Windows 専用（`net10.0-windows`）のジャンプリスト公開ライブラリで、`ShellInterop.Core` に依存します。分割版は未公開で、古い Core 0.1.0-preview.1 のパッケージを置き換えてはいけません。名前空間は `ShellInterop.Core.JumpLists` のままですが、バイナリ互換は保証しません。
+`ShellInterop.JumpList` は Windows 専用（`net10.0-windows`）のジャンプリスト公開ライブラリで、`ShellInterop.Core` に依存します。分割版（0.2.0-preview.1）は 2026-11-15 に NuGet.org で公開済みです。古い Core 0.1.0-preview.1 は NuGet.org では公開しておらず、置き換えて使ってはいけません。名前空間は `ShellInterop.Core.JumpLists` のままですが、バイナリ互換は保証しません。
 
 ## 1. できること・できないこと
 

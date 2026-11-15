@@ -22,7 +22,7 @@ ShellInterop.Core は Avalonia 専用ではなく、WPF など他の .NET アプ
 |---|---|
 | .NET | .NET 10 SDK |
 | ライブラリの TFM | `net10.0-windows`（Windows 専用。クロスプラットフォームではない） |
-| 参照方法 | 現時点は `ProjectReference` のみ（NuGet パッケージは未提供） |
+| 参照方法 | `ProjectReference`、または NuGet.org のプレリリース版パッケージ（`ShellInterop.Core`・`ShellInterop.JumpList` 0.2.0-preview.1、`ShellInterop.Notifications` 0.1.0-preview.1） |
 | Avalonia | サンプルは Avalonia / Avalonia.Desktop 12.1.4 でビルド確認 |
 | AUMID | アプリ固有の ID を 1 つ決める。`Company.Product[.Sub]` 形式、128 文字以内、空白なし、各セグメントは ASCII 英数字・`-`・`_` |
 

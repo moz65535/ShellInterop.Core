@@ -1,6 +1,6 @@
 # Publication checklist
 
-A working checklist for three separate publication actions. Nothing here is a legal clearance, and completing a list does not settle the open rights questions. Current status: the GitHub repository is already public and part of the `main` history is already published; local commits that are not yet pushed are not public. The NuGet packages and the Tracker ZIP have not been published.
+A working checklist for three separate publication actions. Nothing here is a legal clearance, and completing a list does not settle the open rights questions. Current status: the GitHub repository is public. `ShellInterop.Core` 0.2.0-preview.1, `ShellInterop.JumpList` 0.2.0-preview.1 and `ShellInterop.Notifications` 0.1.0-preview.1 were published on NuGet.org on 2026-11-15, and GitHub Prereleases exist for the tags `core/v0.2.0-preview.1`, `jumplist/v0.2.0-preview.1` and `notifications/v0.1.0-preview.1`. The Tracker ZIP has not been published. The checklist items below were written before publication and are kept as a record.
 
 Three questions are kept apart on purpose:
 
@@ -18,10 +18,11 @@ Three questions are kept apart on purpose:
 
 **Current state**
 - The GitHub repository is already public, so no visibility change is needed.
-- Part of the `main` history is already published. Local commits that have not been pushed are not yet public; pushing them is a separate step.
+- The `main` history is published (the checked-out `main` equalled `origin/main` at the time of the first NuGet publication).
+- Annotated tags and GitHub Prereleases exist for the three package versions (see `VERSIONING.md`); no `.nupkg` is attached to them.
 
 **Not done**
-- Pushing the unpushed local commits, creating a release or tag.
+- Nothing further for this section at present.
 
 **Final checks before publishing**
 - `git ls-files` still shows no `dll`, `nupkg`, `zip`, `exe`, `h`, `idl`, `winmd`.
@@ -42,8 +43,11 @@ Three questions are kept apart on purpose:
 - A minimal consumer restored and built the packages from a local feed.
 - No `ShellInterop.*` package ID was found on NuGet.org as of SHELL-PACK-02.
 
+**Done**
+- The three packages were uploaded to NuGet.org and published on 2026-11-15; a restore from the official feed and a minimal consumer Release build succeeded (SHELL-NUGET-05).
+
 **Not done**
-- `dotnet nuget push`, or any upload to NuGet.org.
+- Nothing further for this section at present. Published versions are never overwritten.
 
 **Final checks before publishing**
 - Re-check the package IDs and versions on NuGet.org immediately before pushing; do not overwrite or reuse an existing version.

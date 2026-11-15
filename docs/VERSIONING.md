@@ -2,7 +2,7 @@
 
 ShellInterop uses **independent, per-package versioning**. Each NuGet package carries its own version, and the version numbers are not required to match.
 
-## Current planned first-publication versions
+## First-publication versions (published on NuGet.org on 2026-11-15)
 
 | Package | Version |
 |---|---|
@@ -12,7 +12,7 @@ ShellInterop uses **independent, per-package versioning**. Each NuGet package ca
 
 Core and JumpList share a version only because they were updated together in this round of development. That is a coincidence of coordinated work, not a permanent same-version constraint. `ShellInterop.Notifications` is an independent package and is deliberately **not** raised to `0.2.0` to make the numbers look alike.
 
-These are planned versions. Nothing is published on NuGet.org until the maintainer explicitly decides to publish.
+These three versions are published on NuGet.org as preview releases. A published package ID and version is never overwritten (rule 8).
 
 ## Rules
 
@@ -26,6 +26,16 @@ These are planned versions. Nothing is published on NuGet.org until the maintain
 8. Never overwrite an already published package ID and version. Fix problems by publishing a new version.
 9. Each package can be published independently of the others.
 10. If a specific combination of package versions was verified together, record it in a release note when that is useful.
+
+## Git tags and GitHub Releases
+
+Each published package version gets its own annotated Git tag, named `<package-slug>/v<PackageVersion>`:
+
+- `core/v0.2.0-preview.1`
+- `jumplist/v0.2.0-preview.1`
+- `notifications/v0.1.0-preview.1`
+
+A GitHub Release is created per updated package, pointing at that package's tag. Preview versions are marked as Prerelease. NuGet.org is the distribution channel for packages, so `.nupkg` files are not attached to GitHub Releases. Packages that did not change get no new tag or Release.
 
 ## Future packages
 
