@@ -18,9 +18,19 @@ public sealed record JumpTaskDefinition
     /// <summary>Optional absolute working directory.</summary>
     public string? WorkingDirectory { get; init; }
 
-    /// <summary>Absolute path of the file that holds the icon (.exe/.dll/.ico). The Shell requires an icon location.</summary>
+    /// <summary>
+    /// Absolute path of the file that holds the icon (.exe/.dll/.ico). The Shell requires an icon location.
+    /// </summary>
+    /// <remarks>
+    /// Passed to <c>IShellLink::SetIconLocation</c>. A success HRESULT only means the API accepted the value; it does not
+    /// guarantee that the resource exists, that <see cref="IconResourceIndex"/> is right, or that the intended icon is shown.
+    /// If the call fails, link creation stops and the apply result normally reports a failure (the Jump List update is aborted);
+    /// the library neither publishes the link without an icon nor picks a substitute icon. Choosing the resource and handling
+    /// failures is the caller's responsibility. By default an empty or nonexistent path is rejected during validation.
+    /// </remarks>
     public required string IconResourcePath { get; init; }
 
+    /// <summary>Icon index (or negative resource id) within <see cref="IconResourcePath"/>; the meaning is defined by the Shell and the caller is responsible for choosing it correctly. Default 0.</summary>
     public int IconResourceIndex { get; init; }
 }
 

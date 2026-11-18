@@ -59,9 +59,14 @@ await publisher.ApplyAsync(definition);
 
 `JumpListEntry` は API の入力モデルで、永続化用の形式ではありません。アプリのデータは別に保存し、ファクトリで再構築してください。
 
-## 4. 利用者側の責任（まとめ）
+## 4. アイコン指定（SetIconLocation）
+
+ライブラリは各タスクのアイコンを `IShellLink::SetIconLocation`（`IconResourcePath` / `IconResourceIndex`）で設定します。成功 HRESULT は「API が指定を受け付けた」ことだけを意味し、リソースの実在、インデックスの正しさ、意図したアイコンの表示は保証しません（検証では、存在しないパスや空文字でも `SetIconLocation` が `S_OK` を返しました）。失敗 HRESULT が返った場合、現行実装は当該リンクの生成を中断します。`ApplyAsync` は通常 `TaskCreationFailed`、`FailurePhase = CreateTask`、HRESULT を返し、`AbortList` で更新を中止します。ライブラリは、アイコン未指定での発行、リンクの作り直し、代替アイコンの自動選択をしません。失敗した COM オブジェクトを使い続けて安全だという根拠は確認しておらず、これは現行版の設計上の制約です。アイコンリソースの選択、取得失敗時の代替、適用結果の確認は呼び出し側の責任です。既定（`RequireExistingFiles = true`）では、空または存在しない `IconResourcePath` は COM 呼び出しの前に拒否されます。詳細は [README.ja.md](../../README.ja.md) の「アイコン指定（SetIconLocation）の保証範囲と責任」を参照してください。
+
+## 5. 利用者側の責任（まとめ）
 
 - AUMID を最初のウィンドウ生成前に設定する。実際のジャンプリストに書き込むため、いつ・どの AUMID に対して書くかを管理する。開発用には別の AUMID を使う。
 - 削除済み宛先のキーを保存してから、除外リストに加えて再適用する。
 - アプリ終了前に `ShutdownAsync` の完了（`Completed == true`）を待つ。
 - `Succeeded` と画面表示を同一視しない。表示件数の制限を考慮して、重要な宛先を先頭のカテゴリに置く。
+- 適切なアイコンリソースを選び、取得できない場合の代替と、失敗結果への対応を決める。`SetIconLocation` の成功を、アイコンが表示される保証とみなさない（4 章）。

@@ -74,6 +74,27 @@ JumpListShutdownResult shutdown = await publisher.ShutdownAsync(TimeSpan.FromSec
 if (shutdown.Completed) publisher.Dispose();
 ```
 
+### アイコン指定（SetIconLocation）の保証範囲と責任
+
+`ShellInterop.JumpList` は、各タスク（およびカテゴリ宛先）のアイコンを `IconResourcePath` と `IconResourceIndex` から `IShellLink::SetIconLocation` で設定します。次の 3 つは別のことで、混同しないでください。
+
+1. **API が指定を受け付けたか。** `SetIconLocation` が成功 HRESULT を返したこと。HRESULT が直接示すのは主にこれだけです。
+2. **指定したリソースからアイコンを取得できるか。** 1 からは言えません。検証（SHELL-JL-ICONFALLBACK-01）では、存在しないパスや空文字でも `SetIconLocation` が `S_OK` を返しました。必要な場合は、呼び出し側で別の API により確認します。
+3. **意図した絵柄が実際のジャンプリストに表示されるか。** リソース・インデックス・Shell の実際の描画に依存します。別の有効なアイコンを含む DLL に誤ったインデックスを指定した場合は、HRESULT でも、リソースの存在確認でも検出できません。
+
+したがって、成功 HRESULT は「正しいアイコンが表示される」ことの保証ではありません。
+
+**`SetIconLocation` が失敗 HRESULT を返した場合**、現行実装は当該リンクの生成を中断し、その HRESULT を返します。`ApplyAsync` では通常、`JumpListApplyStatus.TaskCreationFailed`、`FailurePhase = CreateTask`、HRESULT（分かる場合は失敗したエントリの位置）として呼び出し元に返り、ライブラリは `AbortList` を呼んでジャンプリストの更新をコミットしません。`AbortList` 自体の失敗（`AbortFailed`）など、別の結果になる場合もあり、それは別に報告されます。ライブラリは、そのリンクをアイコン未指定のまま発行したり、リンクを作り直したり、代替アイコンを選んだりしません。
+
+**この版で自動フォールバックを実装していない理由。** `AddUserTasks` に渡す Shell リンクにはアイコン位置が必要だと、このリポジトリでは記録しています（`IconResourcePath` のモデルコメントと `docs/API-CONTRACT-REVIEW.md`）。また、`SetIconLocation` が失敗した後の COM オブジェクトを安全に使い続けられるという根拠は確認できておらず、失敗したリンクをそのまま発行する変更は採用していません。これは現行版の設計上の制約であり、「Windows が必ず拒否する」「オブジェクトが必ず壊れる」という意味ではありません。新しいリンクを作り直して代替アイコンを指定する方式は将来の改善候補ですが、採用も実装も決まっていません。
+
+**責任範囲。**
+
+- 呼び出し側アプリ: 適切なアイコンリソースを選ぶ。パスとインデックスの意味を正しく扱う。アイコンを取得できないときの代替は自分で選ぶ。適用結果の失敗情報を確認する。通知・再試行・縮退はアプリの要件で判断する。パスやインデックスの誤りのような自分の入力ミスはアプリ側で防げますが、OS や COM に起因する失敗は予測も完全な防止もできないため、どちらの場合も失敗結果を処理する必要があります。
+- ライブラリ: 渡されたアイコン情報を仕様どおり設定し、API が返した失敗 HRESULT を検出して、公開の結果で呼び出し元に知らせる。既定（`RequireExistingFiles = true`）では、空または存在しない `IconResourcePath` を COM 呼び出しの前に拒否します（`IconResourcePath.Empty` / `IconResourcePath.NotFound`）。この検査はインデックスやアイコンの中身は見ません。アイコンの意味的な正しさや実際の描画は保証しません。
+
+Microsoft のドキュメント: [IShellLinkW::SetIconLocation](https://learn.microsoft.com/windows/win32/api/shobjidl_core/nf-shobjidl_core-ishelllinkw-seticonlocation)、[ICustomDestinationList::AddUserTasks](https://learn.microsoft.com/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-addusertasks)、[ICustomDestinationList::AppendCategory](https://learn.microsoft.com/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-appendcategory)。このライブラリの動作に関する上記の説明は、これらのページではなくソースコードに基づいています。
+
 ### 通知（Toast）
 
 ```csharp

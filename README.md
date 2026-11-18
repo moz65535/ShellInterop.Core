@@ -80,6 +80,27 @@ await publisher.ApplyAsync(definition);
 
 `Entries` is the authoritative ordered input; `Tasks` is a task-only view. Input is copied. Error `TaskIndex` refers to the zero-based entry position for this factory; existing task-only callers retain their old index. `RequestedTaskCount` and the local 100-task limit exclude separators. Empty entries retain the existing empty-Tasks behavior; separator-only input is passed to the Shell. The library does not normalize leading, trailing or adjacent separators: Windows ignores the first/last and suppresses one of adjacent separators. BeginList's minimum-slot count excludes separators and headers only while their total is at most four; extras can affect visible destinations. This library does not truncate to that count. Real Shell: separators inside the `TasksFallback` block displayed as expected with this library (SHELL-JL-07, Windows 11); a standalone test application that calls this library's public API (`JumpListPublisher.ApplyAsync` with `JumpListEntry.Separator()`) also confirmed separator display (SHELL-JL-02, Windows 11). Other separator layouts are not verified.
 
+### Icon location: what the library does and does not guarantee
+
+`ShellInterop.JumpList` sets each task's (and each category destination's) icon with `IShellLink::SetIconLocation`, using `IconResourcePath` and `IconResourceIndex`. Three things are different and must not be conflated:
+
+1. **The API accepted the value.** `SetIconLocation` returned a success HRESULT. This is the only thing the HRESULT directly tells you.
+2. **An icon can be obtained from the resource.** This is not implied by (1). In verification (SHELL-JL-ICONFALLBACK-01), `SetIconLocation` returned `S_OK` for a nonexistent path and for an empty string. Checking this needs a separate API on the caller's side where it matters.
+3. **The intended picture is shown on the real Jump List.** This depends on the resource, the index and what the Shell actually draws. A wrong index into a DLL that contains other valid icons cannot be detected from the HRESULT or from a resource-existence check.
+
+A success HRESULT is therefore not a guarantee that the right icon is displayed.
+
+**If `SetIconLocation` returns a failure HRESULT**, the current implementation stops creating that link and returns the HRESULT. During `ApplyAsync` this normally surfaces as `JumpListApplyStatus.TaskCreationFailed` with `FailurePhase = CreateTask` and the HRESULT (plus the index of the failing entry, when known), and the library calls `AbortList` so that the Jump List update is not committed. Other outcomes, such as `AbortFailed` when `AbortList` itself fails, can occur and are reported separately. The library does not publish that link without an icon, does not re-create the link, and does not choose a substitute icon.
+
+**Why there is no automatic fallback in this version.** This repository records that the Shell link given to `AddUserTasks` needs an icon location (the model comment on `IconResourcePath` and `docs/API-CONTRACT-REVIEW.md`). No evidence has been collected that a COM link object can safely be kept in use after `SetIconLocation` has failed, and publishing the failed link as-is was not adopted. This is a design limitation of the current release, not a claim that Windows always rejects such links or that the object is always unusable. Creating a new link and giving it a substitute icon is a possible future improvement; it has not been decided or implemented.
+
+**Responsibilities.**
+
+- The calling application chooses an appropriate icon resource, understands what path and index mean, picks a substitute itself when an icon cannot be obtained, checks the apply result, and decides how to notify, retry or degrade for its own requirements. Mistakes in its own input (a wrong path or index) can be prevented by the application; failures that come from the OS or COM cannot be predicted or fully prevented, so the application must handle a failed result either way.
+- The library sets the supplied icon information as specified, detects a failure HRESULT returned by the API, and reports it through the public result. By default (`RequireExistingFiles = true`) it also rejects an empty or nonexistent `IconResourcePath` before any COM call (`IconResourcePath.Empty` / `IconResourcePath.NotFound`); that check does not look at the index or the icon contents. It does not guarantee the semantic correctness of the icon or the real rendering.
+
+Microsoft documentation: [IShellLinkW::SetIconLocation](https://learn.microsoft.com/windows/win32/api/shobjidl_core/nf-shobjidl_core-ishelllinkw-seticonlocation), [ICustomDestinationList::AddUserTasks](https://learn.microsoft.com/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-addusertasks), [ICustomDestinationList::AppendCategory](https://learn.microsoft.com/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-appendcategory). The description above of this library's behavior is based on its source code, not on those pages.
+
 ### Shutdown
 
 Do not close the application while a Jump List transaction may be running. `await publisher.ShutdownAsync(timeout)`

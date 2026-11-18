@@ -179,6 +179,7 @@ internal sealed class JumpListService
 
 タスクの必須項目: `Title`、`ApplicationPath`（存在する絶対パスの `.exe`）、`Arguments`（空でない。Shell の要件）、`IconResourcePath`（存在する絶対パス）。
 `Description`、`WorkingDirectory`、`IconResourceIndex`（既定 0）は任意。順序は Shell まで保たれる。1 回の `ApplyAsync` は、その AUMID の Tasks 全体を置き換える。
+アイコン指定の保証範囲（`SetIconLocation` の成功は表示の保証ではない）と失敗時の動作は、[README.ja.md](../README.ja.md) の「アイコン指定（SetIconLocation）の保証範囲と責任」を参照。
 
 ### App.cs
 
