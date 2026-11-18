@@ -53,6 +53,7 @@ Three questions are kept apart on purpose:
 - Re-check the package IDs and versions on NuGet.org immediately before pushing; do not overwrite or reuse an existing version.
 - Re-pack from the committed HEAD that will be published and inspect the nupkg contents (no Microsoft DLLs, LICENSE and README present).
 - Check package metadata (authors, license expression, repository URL, README).
+- Pack with `pwsh scripts/Pack-Release.ps1 -OutputDirectory <empty dir>`. It enables `ShellInteropReleasePathMap` (see `Directory.Build.props`) and then runs `scripts/Test-PackagePdbPaths.ps1`, which reads the CodeView PDB path of Core, JumpList and Notifications and fails on any local absolute path (accepted: `/_/...`). Do not publish if it fails. A plain `dotnet pack` without the flag leaks the build directory into the DLL when packed from a copy without `.git` (SHELL-NUGET-PDB-01); run the gate manually on any nupkg with `pwsh scripts/Test-PackagePdbPaths.ps1 -Path <nupkg dir>`.
 - Decide whether `0.1.0-preview.1` of Core should stay unpublished or untouched.
 
 **Remaining license notes**

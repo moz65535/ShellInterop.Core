@@ -1,0 +1,16 @@
+<Project>
+
+  <!--
+    Release-only source path normalization (SHELL-NUGET-PDB-01).
+    Off by default so local Debug/IDE debugging is unchanged. Enable explicitly when packing:
+      dotnet pack -c Release -p:ShellInteropReleasePathMap=true      (or use scripts/Pack-Release.ps1)
+    Works without a .git directory (the SDK only derives SourceRoot from git), and for any copy location,
+    because the map root is this file's own directory.
+    Result: the PDB path in the DLL's CodeView entry becomes /_/src/<project>/obj/... instead of a local path.
+  -->
+  <PropertyGroup Condition="'$(ShellInteropReleasePathMap)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <PathMap>$(MSBuildThisFileDirectory)=/_/</PathMap>
+  </PropertyGroup>
+
+</Project>
