@@ -113,6 +113,18 @@ public sealed class JumpListDefinition
             ExcludedDestinationKeys = tracking.ExcludedDestinationKeys?.ToArray()!,
         };
 
+    /// <summary>
+    /// Whether the publisher inserts its own separator between the fixed Tasks and the first TasksFallback block, and between
+    /// several fallback blocks (default true). False inserts none; separators the caller put in Entries or in a fallback list
+    /// are always kept as given. Per definition: a planner's returned definition decides for its own session
+    /// (<see cref="JumpListPlanPhase.Initial"/> and <see cref="JumpListPlanPhase.PrivacyFallbackRetry"/> independently).
+    /// </summary>
+    public bool AutoSeparateTasksFallback { get; private init; } = true;
+
+    /// <summary>Returns a copy with <see cref="AutoSeparateTasksFallback"/> set; the original is unchanged.</summary>
+    public JumpListDefinition WithAutoSeparateTasksFallback(bool enabled)
+        => new(AppUserModelId, Entries.ToArray(), Categories.ToArray(), RemovedDestinationTracking) { AutoSeparateTasksFallback = enabled };
+
     /// <summary>The custom categories in display order (read-only snapshot). Empty = Tasks only. This is the canonical set.</summary>
     public IReadOnlyList<JumpCategoryDefinition?> Categories { get; }
 

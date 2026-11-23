@@ -265,6 +265,7 @@ public sealed class JumpListPublisher : IJumpListPublisher
         int taskCount = definition.Tasks.Count;
         var diagnostics = new List<string>();
         var categories = definition.Categories.Select(c => c!).ToArray();
+        bool autoSeparate = definition.AutoSeparateTasksFallback;   // re-read from every adopted plan
         var tracking = definition.RemovedDestinationTracking;   // always the candidates' tracking, even after planning
         uint? slots = null;                                       // pcMinSlots of the last successful BeginList
         IReadOnlyList<RemovedDestination> removed = [];
@@ -422,6 +423,7 @@ public sealed class JumpListPublisher : IJumpListPublisher
                 entries = planned.Entries.Select(e => e!).ToArray();
                 taskCount = planned.Tasks.Count;
                 categories = planned.Categories.Select(c => c!).ToArray();
+                autoSeparate = planned.AutoSeparateTasksFallback;
                 return null;
             }
 
@@ -527,7 +529,7 @@ public sealed class JumpListPublisher : IJumpListPublisher
                     var block = BuildFallbackBlock(fallback, excluded);
                     if (block.Count > 0)
                     {
-                        if (finalEntries.Count > 0 && !finalEntries[^1].IsSeparator)
+                        if (autoSeparate && finalEntries.Count > 0 && !finalEntries[^1].IsSeparator)
                         {
                             finalEntries.Add(JumpListEntry.Separator());
                         }
