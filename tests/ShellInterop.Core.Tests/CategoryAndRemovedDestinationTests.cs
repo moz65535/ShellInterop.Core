@@ -177,8 +177,7 @@ public class CategoryAndRemovedDestinationTests
         Assert.Contains("Category.NameEmpty", Codes(Def(new() { Name = " ", Destinations = [] }, Track())));
 
         var dupOfNormal = new[] { JumpListEntry.ForTask(Samples.Task("T")) };
-        Assert.Contains("Fallback.Invalid", Codes(Def(Category(dupOfNormal, Dest("1")), Track(), "T")));
-        var unknownKey = new[] { JumpListEntry.ForKeyedTask("nope", Samples.Task("F")) };
+        Assert.Empty(Codes(Def(Category(dupOfNormal, Dest("1")), Track(), "T")));        var unknownKey = new[] { JumpListEntry.ForKeyedTask("nope", Samples.Task("F")) };
         Assert.Contains("Fallback.Invalid", Codes(Def(Category(unknownKey, Dest("1")), Track())));
     }
 

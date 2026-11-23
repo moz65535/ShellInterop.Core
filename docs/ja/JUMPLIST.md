@@ -53,7 +53,7 @@ await publisher.ApplyAsync(definition);
 3. 保存したら **もう一度 Apply** します。除外した宛先は二度と追加されません。
 4. `RemovedDestinationUnidentifiable`: 要素が読めない・曖昧だった（または一覧を読めなかった）場合。中断し、何もコミットせず、削除済みリストは保持されます。
 
-`AppendCategory` では、`E_ACCESSDENIED`（プライバシー設定やポリシー）だけが許容されます。`TasksFallback` がなければそのカテゴリは省略され（`CategorySkipped`）、あれば呼び出し側が明示した静的なエントリが Tasks に追加されます（`TasksFallback`）。宛先を自動で変換することはなく、キー付きのフォールバック項目（`JumpListEntry.ForKeyedTask`）は除外中なら落とされ、通常のタスクと重複するものは拒否され、ブロック内の区切り線は整理・統合されます（通常のタスクの後に区切り線が 1 つ入ります）。フォールバックに履歴由来の項目を入れないでください。Windows のプライバシー設定を変更することはありません。それ以外の HRESULT の失敗は中断します（`CategoryAppendFailed`）。Apply のたびに `AppendCategory` をやり直します。
+`AppendCategory` では、`E_ACCESSDENIED`（プライバシー設定やポリシー）だけが許容されます。`TasksFallback` がなければそのカテゴリは省略され（`CategorySkipped`）、あれば呼び出し側が明示した静的なエントリが Tasks に追加されます（`TasksFallback`）。宛先を自動で変換することはなく、キー付きのフォールバック項目（`JumpListEntry.ForKeyedTask`）は除外中なら落とされ、通常のタスクや他のフォールバックと同じコマンド（パスと引数）の項目もライブラリ側では拒否されず（Windows Shell の全バージョンでの重複表示は保証しません。宛先の重複やキー、削除履歴に関する別の検証は維持されます）、ブロック内の区切り線は整理・統合されます（通常のタスクの後に区切り線が 1 つ入ります）。フォールバックに履歴由来の項目を入れないでください。Windows のプライバシー設定を変更することはありません。それ以外の HRESULT の失敗は中断します（`CategoryAppendFailed`）。Apply のたびに `AppendCategory` をやり直します。
 
 結果のフィールド: `EffectiveDisplayMode`（成功時のみ設定。`TasksOnly`、`CategoryAndTasks`、`CategoryEmpty`、`TasksFallback`、`CategorySkipped`）、`FallbackReason`、`RemovedDestinations`。これらは COM の結果を表すもので、Explorer が何を表示しているかではありません。
 

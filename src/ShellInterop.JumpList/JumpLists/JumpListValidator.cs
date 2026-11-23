@@ -192,9 +192,6 @@ public static class JumpListValidator
             }
         }
 
-        var normal = new HashSet<(string, string)>(
-            definition.Tasks.Where(t => t is not null).Select(t => (t!.ApplicationPath?.ToUpperInvariant() ?? "", t.Arguments ?? "")));
-        var seen = new HashSet<(string, string)>();
         foreach (var fallback in categories.Select(c => c?.TasksFallback).OfType<IReadOnlyList<JumpListEntry?>>())
         {
             int taskCount = 0;
@@ -217,15 +214,6 @@ public static class JumpListValidator
                 if (e.Key is not null && !keys.Contains(e.Key))
                 {
                     errors.Add(new("Fallback.Invalid", "A keyed fallback entry must use the Key of a destination or MatchOnly entry.", i));
-                }
-
-                if (e.Task is { } t)
-                {
-                    var id = (t.ApplicationPath?.ToUpperInvariant() ?? "", t.Arguments ?? "");
-                    if (normal.Contains(id) || !seen.Add(id))
-                    {
-                        errors.Add(new("Fallback.Invalid", "Fallback task duplicates an ordinary or another fallback task (same path and arguments).", i));
-                    }
                 }
             }
 

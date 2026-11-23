@@ -169,6 +169,49 @@ public class MultiCategoryTests
         Assert.DoesNotContain(shell.Store, t => t.Title == "Task F2");
     }
 
+    // SHELL-JL-DUPLICATE-VALIDATION-REMOVE01: identical path/arguments are not rejected for fallback headings (Fake Shell only).
+    private static JumpListEntry Heading(string title) => JumpListEntry.ForTask(Samples.Task("H") with { Title = title, Arguments = "--no-op" });
+
+    private static JumpListDefinition DuplicateHeadingDef()
+        => Def(Track(["k2"]),
+            Cat("A", ["1", "2"], Heading("Heading A"), Fb("1"), Fb("2")),
+            Cat("B", ["3"], Heading("Heading B"), Fb("3")));
+
+    [Fact]
+    public void FallbackTasksWithSameCommand_AreValid_InSameBlock_AcrossBlocks_AndAsOrdinaryTask()
+    {
+        Assert.Empty(JumpListValidator.Validate(DuplicateHeadingDef(), Samples.Options()));
+        var sameAsOrdinary = Def(Track(), Cat("A", ["1"], JumpListEntry.ForTask(Samples.Task("T")), JumpListEntry.ForTask(Samples.Task("T"))));
+        Assert.Empty(JumpListValidator.Validate(sameAsOrdinary, Samples.Options()));
+    }
+
+    [Fact]
+    public async Task DuplicateCommandHeadings_FallBackInOrder_WithoutPlanFailure()
+    {
+        var shell = new FakeShell();
+        shell.AppendCategoryHrByCall[1] = Hresults.AccessDenied;
+        var result = await Apply(shell, DuplicateHeadingDef());
+        Assert.True(result.Succeeded);
+        Assert.Equal(JumpListDisplayMode.TasksFallback, result.EffectiveDisplayMode);
+        Assert.Equal(["Task T", "Heading A", "Task F1", "Heading B", "Task F3"], shell.Store.Select(t => t.Title));
+    }
+
+    [Fact]
+    public async Task DuplicateCommandHeadings_SurvivePrivacyFallbackRetry_WithoutPlanFailure()
+    {
+        var shell = new FakeShell();
+        shell.AppendCategoryHrByCall[2] = Hresults.AccessDenied;
+        using var publisher = Samples.Publisher(shell);
+        var phases = new List<JumpListPlanPhase>();
+        var result = await publisher.ApplyPlannedAsync(DuplicateHeadingDef(), ctx => { phases.Add(ctx.Phase); return DuplicateHeadingDef(); });
+        Assert.True(result.Succeeded);
+        Assert.Equal([JumpListPlanPhase.Initial, JumpListPlanPhase.PrivacyFallbackRetry], phases);
+        Assert.Equal(2, Count(shell, "BeginList"));
+        Assert.Contains("AbortList", shell.Calls);
+        Assert.Equal(1, Count(shell, "CommitList"));
+        Assert.Equal(["Task T", "Heading A", "Task F1", "Heading B", "Task F3"], shell.Store.Select(t => t.Title));
+    }
+
     [Fact]
     public async Task AccessDeniedAfterEarlierSuccess_AbortsRestartsTasksOnly_AndCommitsOnce()
     {

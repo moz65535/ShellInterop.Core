@@ -193,7 +193,8 @@ public sealed record JumpCategoryDefinition
     /// Used ONLY when AppendCategory fails with E_ACCESSDENIED (privacy setting/policy). Explicit static commands the caller
     /// chose; destinations are never converted automatically. Null = no fallback (the category is skipped).
     /// Entries made with <see cref="JumpListEntry.ForKeyedTask"/> are dropped while their Key is excluded.
-    /// Must not duplicate an ordinary task (same path and arguments). Do not put history-derived items here.
+    /// The library does not reject fallback tasks that share a path and arguments with an ordinary task or another fallback
+    /// task; Windows display of identical commands is not guaranteed for every Shell version. Do not put history-derived items here.
     /// </summary>
     public IReadOnlyList<JumpListEntry?>? TasksFallback { get; init; }
 }
