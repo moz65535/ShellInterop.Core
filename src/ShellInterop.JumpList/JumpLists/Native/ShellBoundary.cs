@@ -21,7 +21,11 @@ internal interface IJumpListNative : IDisposable
 {
     int SetAppId(string appId);
 
-    int BeginList();
+    /// <summary>
+    /// Starts the session. <paramref name="slots"/> is BeginList's pcMinSlots, valid only when the returned HRESULT is a success;
+    /// on failure it is 0 and must not be used.
+    /// </summary>
+    int BeginList(out uint slots);
 
     int CreateTasks(IReadOnlyList<JumpListEntry> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex);
 

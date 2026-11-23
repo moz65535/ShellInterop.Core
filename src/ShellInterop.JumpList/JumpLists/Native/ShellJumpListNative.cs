@@ -13,15 +13,21 @@ internal sealed class ShellJumpListNative : IJumpListNative
 
     public int SetAppId(string appId) => Call(l => l.SetAppID(appId));
 
-    public int BeginList()
+    public int BeginList(out uint slots)
     {
+        // A retry BeginList replaces the array of the aborted session: release that one first.
+        ComRelease.Final(_removedDestinations);
+        _removedDestinations = null;
+        uint captured = 0;
         int hr = Call(l =>
         {
             // riid = IObjectArray: the removed-destinations array. It is released in Dispose.
-            int h = l.BeginList(out _, in ShellGuids.IidObjectArray, out object? removed);
+            int h = l.BeginList(out uint minSlots, in ShellGuids.IidObjectArray, out object? removed);
             _removedDestinations = removed;
+            captured = minSlots;
             return h;
         });
+        slots = Hr.Failed(hr) ? 0 : captured;   // the out value of a failed call is never meaningful
         return hr;
     }
 

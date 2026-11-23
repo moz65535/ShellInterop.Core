@@ -256,6 +256,9 @@ public enum JumpListApplyStatus
     CommitFailed,
     /// <summary>A pre-commit failure occurred and AbortList itself failed.</summary>
     AbortFailed,
+
+    /// <summary>The caller's <see cref="JumpListPlanner"/> threw, returned null, or returned an unusable definition. AbortList was called and nothing was committed.</summary>
+    PlanFailed,
     DeleteFailed,
     /// <summary>An unexpected exception left the outcome indeterminate.</summary>
     UnknownState,
@@ -291,7 +294,52 @@ public enum JumpListFailurePhase
     ReadRemoved,
     AppendCategory,
     Unexpected,
+
+    /// <summary>The caller's <see cref="JumpListPlanner"/> failed (see <see cref="JumpListApplyStatus.PlanFailed"/>).</summary>
+    PlanGeneration,
 }
+
+/// <summary>Which BeginList session a <see cref="JumpListPlanner"/> call belongs to.</summary>
+public enum JumpListPlanPhase
+{
+    /// <summary>The first session: categories (if any) will be appended, then Tasks.</summary>
+    Initial,
+
+    /// <summary>
+    /// The session re-opened after AppendCategory failed with E_ACCESSDENIED and the first session was aborted. No category is
+    /// appended in this session; only the TasksFallback entries and ordinary entries of the returned plan are published.
+    /// </summary>
+    PrivacyFallbackRetry,
+}
+
+/// <summary>Information handed to a <see cref="JumpListPlanner"/> while the BeginList session is open.</summary>
+public sealed record JumpListPlanContext
+{
+    /// <summary>
+    /// The value returned by ICustomDestinationList::BeginList for THIS session (its pcMinSlots out parameter), passed through unchanged.
+    /// Nothing is subtracted, clamped or defaulted (0 stays 0). It is a value reported by the Shell; it is not a guaranteed
+    /// number of rows Explorer will display, which also depends on pins, Tasks, categories, display state and user settings,
+    /// and it may differ between sessions (a privacy fallback retry calls BeginList again and reports its own value).
+    /// </summary>
+    public required uint BeginListSlots { get; init; }
+
+    public required JumpListPlanPhase Phase { get; init; }
+
+    /// <summary>Classified removed destinations of this session (empty when tracking is off). Pending/unidentifiable removals never reach the planner: the session is aborted before.</summary>
+    public IReadOnlyList<RemovedDestination> RemovedDestinations { get; init; } = [];
+
+    /// <summary>Keys already persisted as user-removed (from the candidate definition's tracking). They are filtered out of the plan again by the publisher.</summary>
+    public IReadOnlyCollection<string> ExcludedDestinationKeys { get; init; } = [];
+}
+
+/// <summary>
+/// Chooses what to publish after BeginList succeeded, from <see cref="JumpListPlanContext.BeginListSlots"/>. Invoked on the
+/// Jump List STA worker while the COM session is open (once per BeginList: again on a privacy fallback retry).
+/// Keep it fast and synchronous: do not block on, or call, the same publisher, and do not touch UI objects.
+/// Return the definition to publish (same AppUserModelId; tracking presence must equal the candidate definition's), or null to
+/// abort without committing. An exception also aborts without committing (<see cref="JumpListApplyStatus.PlanFailed"/>).
+/// </summary>
+public delegate JumpListDefinition? JumpListPlanner(JumpListPlanContext context);
 
 /// <summary>What the library can claim about the Shell's stored list after the call.</summary>
 public enum JumpListShellState
@@ -344,6 +392,12 @@ public sealed record JumpListApplyResult
     /// <summary>Non-fatal observations such as COM cleanup problems.</summary>
     public IReadOnlyList<string> Diagnostics { get; init; } = [];
 
+    /// <summary>
+    /// pcMinSlots of the last BeginList that succeeded (the one whose session was committed or last used); null when BeginList was
+    /// never reached or failed. Same caveats as <see cref="JumpListPlanContext.BeginListSlots"/>.
+    /// </summary>
+    public uint? BeginListSlots { get; init; }
+
     public TimeSpan QueueWait { get; init; }
 
     public TimeSpan Elapsed { get; init; }
@@ -388,6 +442,18 @@ public interface IJumpListPublisher : IDisposable
     /// BeginList..CommitList transaction. Requests are executed one at a time, in submission order.
     /// </summary>
     Task<JumpListApplyResult> ApplyAsync(JumpListDefinition definition, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Same transaction as <see cref="ApplyAsync"/>, but what is published is decided inside it, after BeginList, by
+    /// <paramref name="planner"/> from the Shell-reported slot count.
+    /// <paramref name="candidates"/> is the full candidate set: it supplies the AppUserModelId, the removed-destination
+    /// tracking and every identity that may appear in the removed list (so include ALL destinations the planner might choose
+    /// from). It is validated and, if the planner is never reached (e.g. BeginList fails), nothing from it is published.
+    /// The planner's result is validated with the same rules; the candidates' tracking (excluded keys) stays authoritative.
+    /// On a privacy fallback (E_ACCESSDENIED) the session is aborted, BeginList is called again and the planner is called again
+    /// with the new slot count (<see cref="JumpListPlanPhase.PrivacyFallbackRetry"/>).
+    /// </summary>
+    Task<JumpListApplyResult> ApplyPlannedAsync(JumpListDefinition candidates, JumpListPlanner planner, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes the whole custom Jump List of an AppUserModelID (cleanup/uninstall use only; not for group switching).

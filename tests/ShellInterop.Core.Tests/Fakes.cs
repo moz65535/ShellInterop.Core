@@ -24,6 +24,16 @@ internal sealed class FakeShell : IJumpListNativeFactory
     public int CreateHr;
     public int SetAppIdHr;
     public int BeginHr;
+
+    /// <summary>pcMinSlots a successful BeginList reports (default 10, like the Windows 11 PoC observation); per-call override by 1-based BeginList call number.</summary>
+    public uint BeginSlots = 10;
+
+    public Dictionary<int, uint> BeginSlotsByCall { get; } = [];
+
+    public int BeginListCalls;
+
+    /// <summary>When &gt; 0, BeginList calls numbered from this value on fail with E_FAIL.</summary>
+    public int FailBeginFromCall;
     public int CreateTasksHr;
     public int AddTasksHr;
     public int CommitHr;
@@ -174,15 +184,21 @@ internal sealed class FakeShell : IJumpListNativeFactory
             return owner.SetAppIdHr;
         }
 
-        public int BeginList()
+        public int BeginList(out uint slots)
         {
             owner.Record("BeginList");
-            if (owner.BeginHr >= 0)
+            int call = ++owner.BeginListCalls;
+            // A failing call hands back a bogus non-zero value on purpose: the publisher must never use it.
+            int hr = owner.FailBeginFromCall > 0 && call >= owner.FailBeginFromCall ? Hresults.Fail : owner.BeginHr;
+            slots = hr >= 0
+                ? (owner.BeginSlotsByCall.TryGetValue(call, out uint s) ? s : owner.BeginSlots)
+                : 999;
+            if (hr >= 0)
             {
                 _pending = [];
             }
 
-            return owner.BeginHr;
+            return hr;
         }
 
         public int CreateTasks(IReadOnlyList<JumpListEntry> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex)

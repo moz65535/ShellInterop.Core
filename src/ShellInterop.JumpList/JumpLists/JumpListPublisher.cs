@@ -49,6 +49,12 @@ public sealed class JumpListPublisher : IJumpListPublisher
     internal bool WorkerIsAlive => _thread.IsAlive;
 
     public Task<JumpListApplyResult> ApplyAsync(JumpListDefinition definition, CancellationToken cancellationToken = default)
+        => ApplyCoreAsync(definition, null, cancellationToken);
+
+    public Task<JumpListApplyResult> ApplyPlannedAsync(JumpListDefinition candidates, JumpListPlanner planner, CancellationToken cancellationToken = default)
+        => ApplyCoreAsync(candidates, planner ?? throw new ArgumentNullException(nameof(planner)), cancellationToken);
+
+    private Task<JumpListApplyResult> ApplyCoreAsync(JumpListDefinition definition, JumpListPlanner? planner, CancellationToken cancellationToken)
     {
         int count = definition?.Tasks.Count ?? 0;
         if (cancellationToken.IsCancellationRequested)
@@ -67,7 +73,7 @@ public sealed class JumpListPublisher : IJumpListPublisher
             });
         }
 
-        return Enqueue(count, cancellationToken, queueWait => ExecuteApply(definition!, queueWait));
+        return Enqueue(count, cancellationToken, queueWait => ExecuteApply(definition!, planner, queueWait));
     }
 
     public Task<JumpListApplyResult> DeleteListAsync(string? appUserModelId, CancellationToken cancellationToken = default)
@@ -251,7 +257,7 @@ public sealed class JumpListPublisher : IJumpListPublisher
 
     private enum Stage { None, Created, SessionOpen, Committing }
 
-    private JumpListApplyResult ExecuteApply(JumpListDefinition definition, TimeSpan queueWait)
+    private JumpListApplyResult ExecuteApply(JumpListDefinition definition, JumpListPlanner? planner, TimeSpan queueWait)
     {
         var sw = Stopwatch.StartNew();
         string appId = definition.AppUserModelId!;
@@ -259,7 +265,8 @@ public sealed class JumpListPublisher : IJumpListPublisher
         int taskCount = definition.Tasks.Count;
         var diagnostics = new List<string>();
         var categories = definition.Categories.Select(c => c!).ToArray();
-        var tracking = definition.RemovedDestinationTracking;
+        var tracking = definition.RemovedDestinationTracking;   // always the candidates' tracking, even after planning
+        uint? slots = null;                                       // pcMinSlots of the last successful BeginList
         IReadOnlyList<RemovedDestination> removed = [];
         var displayMode = JumpListDisplayMode.TasksOnly;
         var fallbackReason = JumpListFallbackReason.None;
@@ -279,6 +286,7 @@ public sealed class JumpListPublisher : IJumpListPublisher
                 EffectiveDisplayMode = status == JumpListApplyStatus.Success ? displayMode : JumpListDisplayMode.None,
                 FallbackReason = fallbackReason,
                 RemovedDestinations = removed,
+                BeginListSlots = slots,
             };
 
         if (CheckProcessAppId(appId) is { } mismatch)
@@ -308,14 +316,15 @@ public sealed class JumpListPublisher : IJumpListPublisher
                 return Done(JumpListApplyStatus.BeginFailed, JumpListShellState.Unchanged, new(JumpListFailurePhase.SetAppId, hr, "SetAppID failed."));
             }
 
-            hr = list.BeginList();
-            Log("BeginList", "begin transaction", hr);
+            hr = list.BeginList(out uint beginSlots);
+            Log("BeginList", Hr.Failed(hr) ? "begin transaction" : $"begin transaction slots={beginSlots}", hr);
             if (Hr.Failed(hr))
             {
-                // No session was opened, so there is nothing to abort.
+                // No session was opened, so there is nothing to abort. The slot value of a failed call is never used.
                 return Done(JumpListApplyStatus.BeginFailed, JumpListShellState.Unchanged, new(JumpListFailurePhase.BeginList, hr, "BeginList failed."));
             }
 
+            slots = beginSlots;
             stage = Stage.SessionOpen;
 
             var excluded = new HashSet<string>(tracking?.ExcludedDestinationKeys ?? [], StringComparer.Ordinal);
@@ -360,12 +369,74 @@ public sealed class JumpListPublisher : IJumpListPublisher
                 return removedStop;
             }
 
+            // Asks the caller's planner (if any) what to publish for the CURRENT session, using that session's own slot count.
+            // Returns the aborted result when the session must stop, or null when the plan was adopted (or there is no planner).
+            JumpListApplyResult? Plan(JumpListPlanPhase phase)
+            {
+                if (planner is null)
+                {
+                    return null;
+                }
+
+                JumpListApplyResult PlanFailed(string message, int? planHr = null, IReadOnlyList<JumpListValidationError>? validation = null)
+                    => AbortAfterFailure(list!, JumpListApplyStatus.PlanFailed, new(JumpListFailurePhase.PlanGeneration, planHr, message), Done) with
+                    {
+                        ValidationErrors = validation ?? [],
+                    };
+
+                JumpListDefinition? planned;
+                try
+                {
+                    planned = planner(new JumpListPlanContext
+                    {
+                        BeginListSlots = slots!.Value,
+                        Phase = phase,
+                        RemovedDestinations = removed,
+                        ExcludedDestinationKeys = excluded.ToArray(),
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Log("PlanFailed", ex.GetType().Name + ": " + ex.Message);
+                    return PlanFailed("The planner threw " + ex.GetType().Name + ": " + ex.Message, Hr.FromException(ex));
+                }
+
+                Log("Plan", $"phase={phase} slots={slots} planned={planned is not null}");
+                if (planned is null)
+                {
+                    return PlanFailed("The planner returned null; nothing was committed.");
+                }
+
+                var errors = JumpListValidator.Validate(planned, _options);
+                if (errors.Count > 0)
+                {
+                    return PlanFailed($"The planned definition has {errors.Count} validation error(s).", null, errors);
+                }
+
+                if (!string.Equals(planned.AppUserModelId, appId, StringComparison.Ordinal)
+                    || (planned.RemovedDestinationTracking is null) != (tracking is null))
+                {
+                    return PlanFailed("The planned definition must keep the AppUserModelId and the presence of removed-destination tracking of the candidates.");
+                }
+
+                entries = planned.Entries.Select(e => e!).ToArray();
+                taskCount = planned.Tasks.Count;
+                categories = planned.Categories.Select(c => c!).ToArray();
+                return null;
+            }
+
+            if (Plan(JumpListPlanPhase.Initial) is { } planStop)
+            {
+                return planStop;
+            }
+
             var finalEntries = entries.ToList();
             // Categories keep the caller's order; a category whose destinations are all excluded is never appended.
-            var plans = categories
+            List<(JumpCategoryDefinition Category, JumpDestinationDefinition[] Shown)> BuildPlans() => categories
                 .Select(c => (Category: c, Shown: c.Destinations.Where(d => !excluded.Contains(d.Key)).ToArray()))
                 .Where(p => p.Shown.Length > 0)
                 .ToList();
+            var plans = BuildPlans();
             if (categories.Length > 0 && plans.Count == 0)
             {
                 displayMode = JumpListDisplayMode.CategoryEmpty;
@@ -421,18 +492,29 @@ public sealed class JumpListPublisher : IJumpListPublisher
                     }
 
                     stage = Stage.Created;
-                    hr = list.BeginList();
-                    Log("BeginList", "begin transaction (privacy fallback retry)", hr);
+                    slots = null;   // the first session's value does not describe the retry session
+                    hr = list.BeginList(out uint retrySlots);
+                    Log("BeginList", Hr.Failed(hr) ? "begin transaction (privacy fallback retry)" : $"begin transaction (privacy fallback retry) slots={retrySlots}", hr);
                     if (Hr.Failed(hr))
                     {
                         return Done(JumpListApplyStatus.BeginFailed, JumpListShellState.Unchanged, new(JumpListFailurePhase.BeginList, hr, "BeginList failed on the privacy fallback retry."));
                     }
 
+                    slots = retrySlots;
                     stage = Stage.SessionOpen;
                     if (CheckRemoved() is { } retryStop)
                     {
                         return retryStop;
                     }
+
+                    // Re-plan with the retry session's own slot count (and removed list); the first plan is not reused.
+                    if (Plan(JumpListPlanPhase.PrivacyFallbackRetry) is { } retryPlanStop)
+                    {
+                        return retryPlanStop;
+                    }
+
+                    finalEntries = entries.ToList();
+                    plans = BuildPlans();
                 }
 
                 foreach (var category in plans.Select(p => p.Category))

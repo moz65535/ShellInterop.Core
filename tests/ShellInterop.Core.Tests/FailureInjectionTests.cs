@@ -37,7 +37,7 @@ internal sealed class FaultInjectingFactory(IJumpListNativeFactory inner, Inject
     {
         public int SetAppId(string appId) => real.SetAppId(appId);
 
-        public int BeginList() => real.BeginList();
+        public int BeginList(out uint slots) => real.BeginList(out slots);
 
         public int CreateTasks(IReadOnlyList<JumpListEntry> tasks, out ITaskCollectionHandle? collection, out int failedTaskIndex)
         {

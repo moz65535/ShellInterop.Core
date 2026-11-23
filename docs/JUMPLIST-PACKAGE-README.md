@@ -37,3 +37,17 @@ AppendCategory: only `E_ACCESSDENIED` (privacy setting/policy) is tolerated. Wit
 Result fields: `EffectiveDisplayMode` (set on success only: `TasksOnly`, `CategoryAndTasks`, `CategoryEmpty`, `TasksFallback`, `CategorySkipped`), `FallbackReason`, `RemovedDestinations`. They describe COM results, not what Explorer shows.
 
 `JumpListEntry` is an API input model, not a persistence format; persist application data separately and reconstruct entries with the factories.
+
+### Choosing items from the BeginList slot count
+
+`ApplyPlannedAsync(candidates, planner)` runs the usual BeginList..CommitList transaction, but calls `planner(JumpListPlanContext)` after BeginList succeeded, so the caller can choose what to publish from `context.BeginListSlots` (the `pcMinSlots` value returned by `ICustomDestinationList::BeginList`, passed through unchanged; 0 stays 0). The value is reported by the Shell; it is not a guaranteed number of displayed rows (pins, Tasks, categories, display state and settings also matter) and it can differ between sessions. The library subtracts or reserves nothing; reserving control tasks, ordering and selection are the caller's decisions.
+
+`candidates` supplies the AppUserModelId, the removed-destination tracking and all identities that may show up in the removed list (include every destination the planner may choose from). The planner returns the definition to publish, or null / throws to abort without committing (`PlanFailed`). If AppendCategory fails with E_ACCESSDENIED after an earlier category succeeded, the session is aborted, BeginList is called again and the planner is called again (`Phase = PrivacyFallbackRetry`) with the new session's slot count. The planner runs on the STA worker while the COM session is open: keep it synchronous and fast, and do not call the same publisher from it. `JumpListApplyResult.BeginListSlots` records the value of the last successful BeginList (null if none).
+
+```csharp
+var result = await publisher.ApplyPlannedAsync(allCandidates, ctx =>
+{
+    int budget = (int)Math.Max(0, (long)ctx.BeginListSlots - reservedByCaller);
+    return BuildDefinitionFor(budget, ctx.Phase);   // caller-owned selection logic
+});
+```
