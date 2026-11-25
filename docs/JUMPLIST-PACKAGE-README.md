@@ -1,12 +1,36 @@
 # ShellInterop.JumpList
 
-Windows-only Jump List Tasks publisher targeting `net10.0-windows`; depends on `ShellInterop.Core >= 0.2.0-preview.1` (a NuGet dependency, restored transitively). This is a pre-release (`0.2.0-preview.1`), released together with `ShellInterop.Core` `0.2.0-preview.1`. Publishing the package is not a legal clearance, and is separate from distributing an application that uses it. Earlier internal Core builds numbered `0.1.0-preview.1` included the JumpList types and were never published on NuGet.org. Add a reference to this package and rebuild when migrating from that earlier Core code. The namespace remains `ShellInterop.Core.JumpLists`, but binary compatibility is not guaranteed.
+Windows-only Jump List Tasks publisher targeting `net10.0-windows`; depends on `ShellInterop.Core >= 0.2.0-preview.2` (a NuGet minimum-version dependency, restored transitively). This is a pre-release (`0.2.0-preview.2`), prepared together with `ShellInterop.Core` `0.2.0-preview.2`. Publishing the package is not a legal clearance, and is separate from distributing an application that uses it. Earlier internal Core builds numbered `0.1.0-preview.1` included the JumpList types and were never published on NuGet.org. Add a reference to this package and rebuild when migrating from that earlier Core code. The namespace remains `ShellInterop.Core.JumpLists`, but binary compatibility is not guaranteed.
 
 Supports Tasks, one or more custom categories (`JumpListDefinition.FromEntriesWithCategories`, `Categories`; `Category` is the single-category view) with removed-destination protection (Fake-tested; real Shell: SHELL-JL-05 single category, SHELL-JL-07 multiple categories, conditional PASS), apply/delete results and safe publisher shutdown. Separators are supported; Recent/Frequent are not implemented. Split-assembly real Shell regression passed without separators (SHELL-SPLIT-02); separators inside `TasksFallback` are real-Shell confirmed (SHELL-JL-07). MIT license; see LICENSE and the repository's rights-review notes.
 
-Packing the JumpList project with the old `0.1.0-preview.1` version remains blocked by a guard (the old Core lacks the split internals); the current `0.2.0-preview.1` of both projects packs. For local tests of other versions, pass the same `-p:Version=...` to both projects and do not publish it.
+Packing the JumpList project with the old `0.1.0-preview.1` version remains blocked by a guard (the old Core lacks the split internals); the current `0.2.0-preview.2` of both projects packs. For local tests of other versions, pass the same `-p:Version=...` to both projects and do not publish it.
 
 Use `JumpListDefinition.FromEntries(appId, [JumpListEntry.ForTask(taskA), JumpListEntry.Separator(), JumpListEntry.ForTask(taskB)])` for mixed ordered entries. The existing task-only constructor remains valid. `Entries` is authoritative and `Tasks` excludes separators; the local 100-task cap and RequestedTaskCount exclude separators. Entry-based error indices count all entries. Windows ignores leading/trailing separators and suppresses adjacent duplicates; the library preserves the supplied sequence. BeginList minimum slots exclude separators and headers only up to four, and additional ones can reduce displayed destinations. Real Shell: separators inside `TasksFallback` were confirmed with this library (SHELL-JL-07); a standalone test application using this library's public API also confirmed separator display (SHELL-JL-02). Other layouts are not verified.
+
+## Changes in 0.2.0-preview.2
+
+Compared with `0.2.0-preview.1` (the previously published version):
+
+- **BeginList slot-aware planning.** `ApplyPlannedAsync` with `JumpListPlanner` / `JumpListPlanContext` (`BeginListSlots`, `Phase`: `Initial` / `PrivacyFallbackRetry`); see "Choosing items from the BeginList slot count". New `JumpListApplyStatus.PlanFailed` and `JumpListFailurePhase.PlanGeneration` report a planner that threw or returned null / an unusable definition (nothing is committed).
+- **Automatic fallback separators can be turned off.** `JumpListDefinition.AutoSeparateTasksFallback` (default `true`) and `WithAutoSeparateTasksFallback(bool)`. With `false`, the publisher inserts no separator of its own between the fixed Tasks and a `TasksFallback` block (or between fallback blocks); separators you put explicitly in `Entries` or in a fallback list are always kept.
+- **Same-command check removed for fallback tasks.** A `TasksFallback` task that has the same path and arguments as an ordinary Task or another fallback task was rejected by validation (`Fallback.Invalid`) in 0.2.0-preview.1; it is now accepted. Passing validation is not a statement about what Explorer displays for duplicate commands; that is separate and not guaranteed.
+- **Release build path normalization.** The DLL's CodeView PDB path no longer contains a local absolute path (see the repository's `scripts/Pack-Release.ps1`).
+
+Notes for planned publication:
+
+- `BeginListSlots` is the value the Shell reports from `BeginList`; it does not guarantee how many items Explorer actually shows.
+- The planner runs synchronously on the dedicated STA worker while the COM session is open; keep it fast and do not call the same publisher from it.
+- When BeginList is called again (privacy fallback retry), the planner is called again and plans with the new session's information.
+
+### Compatibility notes (0.2.0-preview.1 to 0.2.0-preview.2)
+
+This is a preview and complete backward compatibility is not promised. Specifically:
+
+- `ApplyAsync` is kept; its contract is unchanged.
+- The integer values of the published `JumpListApplyStatus` members are fixed explicitly and unchanged; `PlanFailed` is appended with a new value (14). `JumpListFailurePhase.PlanGeneration` is appended after the existing members. Code that stores these enums as integers keeps working.
+- `IJumpListPublisher` gained a member, `ApplyPlannedAsync`. External implementations or test doubles of `IJumpListPublisher` must add it, and binaries compiled against `0.2.0-preview.1` that implement the interface need to be rebuilt. No adapter interface or default implementation is provided.
+- Fallback tasks that were rejected before (same command as another task) are now accepted.
 
 ## Icon location
 

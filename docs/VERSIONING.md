@@ -19,13 +19,23 @@ These three versions are published on NuGet.org as preview releases. A published
 1. Each package has its own independent version.
 2. A package with no changes keeps its version; do not bump it just because another package changed.
 3. A new package normally starts at `0.1.0-preview.1`.
-4. The version of a dependency that a package needs is expressed through its NuGet dependency (for example, JumpList depends on `ShellInterop.Core >= 0.2.0-preview.1`), not by matching version numbers.
+4. The version of a dependency that a package needs is expressed through its NuGet dependency (for example, JumpList `0.2.0-preview.1` depends on `ShellInterop.Core >= 0.2.0-preview.1`, and the prepared JumpList `0.2.0-preview.2` on `ShellInterop.Core >= 0.2.0-preview.2`; these are minimum-version ranges, not exact pins), not by matching version numbers.
 5. When a change affects compatibility, update the affected dependent packages and consumers together, in a coordinated way.
 6. Use the ideas of Semantic Versioning: a new feature, a fix and a breaking change are each reflected in the version according to its impact.
 7. While packages are in preview, do not over-promise compatibility. Preview versions may contain breaking changes.
 8. Never overwrite an already published package ID and version. Fix problems by publishing a new version.
 9. Each package can be published independently of the others.
 10. If a specific combination of package versions was verified together, record it in a release note when that is useful.
+
+## Planned next versions (not yet published)
+
+| Package | Current published | Next planned | Reason |
+|---|---|---|---|
+| `ShellInterop.Core` | `0.2.0-preview.1` | `0.2.0-preview.2` | PDB/CodeView local absolute path removed (no API or feature change) |
+| `ShellInterop.JumpList` | `0.2.0-preview.1` | `0.2.0-preview.2` | New features, enum/compatibility fixes, PDB path fix |
+| `ShellInterop.Notifications` | `0.1.0-preview.1` | unchanged | Same PDB path issue exists; to be handled in a later, independent release |
+
+Published versions are never re-packed or replaced. Packages built for local verification (for example by `scripts/Pack-Release.ps1`) are distinct from the packages chosen for publication; a verification pack of an unchanged package such as Notifications is never a replacement candidate. Use `-Package` to pack only what is being released; the PDB gate always runs for the selected packages.
 
 ## Git tags and GitHub Releases
 

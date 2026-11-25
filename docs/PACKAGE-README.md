@@ -2,7 +2,7 @@
 
 Shared Windows Shell foundation: `ProcessAppIdentity` provides the process AppUserModelID helpers. The Jump List publisher now lives in the separate `ShellInterop.JumpList` module, which depends on Core. Both target `net10.0-windows`.
 
-This is a pre-release. Version `0.2.0-preview.1` is a breaking split of the earlier Core code and is released together with `ShellInterop.JumpList` `0.2.0-preview.1`. Earlier internal Core builds numbered `0.1.0-preview.1` included JumpList types and were never published on NuGet.org. New JumpList consumers must reference `ShellInterop.JumpList` (which depends on `ShellInterop.Core >= 0.2.0-preview.1`) and rebuild. The existing namespace remains `ShellInterop.Core.JumpLists`; binary compatibility is not guaranteed.
+This is a pre-release. Version `0.2.0-preview.1` was a breaking split of the earlier Core code. Version `0.2.0-preview.2` has no public API or feature change: it only normalizes the PDB path embedded in the DLL (no local absolute path), and is prepared together with `ShellInterop.JumpList` `0.2.0-preview.2`. Earlier internal Core builds numbered `0.1.0-preview.1` included JumpList types and were never published on NuGet.org. New JumpList consumers must reference `ShellInterop.JumpList` (which depends on `ShellInterop.Core >= 0.2.0-preview.2` in its next version) and rebuild. The existing namespace remains `ShellInterop.Core.JumpLists`; binary compatibility is not guaranteed.
 
 Publishing a NuGet package is not a legal clearance, and is separate from distributing an application that uses it: the application's own publish output and its redistribution conditions (including any Microsoft components) must be reviewed separately.
 
@@ -26,4 +26,4 @@ Adopting MIT does not grant rights held by third parties. Two questions are stil
 license: the permission status of COM declarations (GUIDs, vtable layouts) derived from Windows SDK headers, and rights
 review of code produced with AI assistance.
 
-Packing the JumpList project with the old `0.1.0-preview.1` version remains blocked by a guard (the old Core lacks the split internals); the current `0.2.0-preview.1` of both projects packs. For local tests of other versions, pass the same `-p:Version=...` to both projects and do not publish it.
+Packing the JumpList project with the old `0.1.0-preview.1` version remains blocked by a guard (the old Core lacks the split internals); the current `0.2.0-preview.2` of both projects packs. For local tests of other versions, pass the same `-p:Version=...` to both projects and do not publish it.

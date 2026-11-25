@@ -8,7 +8,7 @@ Three Windows-only, UI-framework-independent .NET libraries:
 - `ShellInterop.JumpList`: Jump List Tasks publisher and Shell COM implementation; references Core.
 - `ShellInterop.Notifications`: Toast sender (Windows SDK .NET projection, no Windows App SDK) with read-only Start Menu shortcut inspection; does not reference Core or JumpList. See [Notifications](#notifications).
 
-> **Pre-release split.** The source tree carries Core `0.2.0-preview.1` and JumpList `0.2.0-preview.1` (a breaking split of the earlier Core code; earlier internal Core builds numbered `0.1.0-preview.1` were never published on NuGet.org) and Notifications `0.1.0-preview.1`. The split passed real Shell regression in SHELL-SPLIT-02. Separators, custom categories and removed-destination tracking have since been checked on the real Shell under limited conditions; see [Verification status](#verification-status).
+> **Pre-release split.** The source tree carries Core `0.2.0-preview.2` and JumpList `0.2.0-preview.2` (the published versions are `0.2.0-preview.1`; `preview.2` is prepared and not yet published) (a breaking split of the earlier Core code; earlier internal Core builds numbered `0.1.0-preview.1` were never published on NuGet.org) and Notifications `0.1.0-preview.1`. The split passed real Shell regression in SHELL-SPLIT-02. Separators, custom categories and removed-destination tracking have since been checked on the real Shell under limited conditions; see [Verification status](#verification-status).
 
 These libraries are independently developed and are not Microsoft products.
 
@@ -16,7 +16,7 @@ These libraries are independently developed and are not Microsoft products.
 
 Earlier `ShellInterop.Core` contained the JumpList API. The split moves its public types into the `ShellInterop.JumpList` assembly. The namespace `ShellInterop.Core.JumpLists` and existing method signatures remain unchanged. Add a reference to `ShellInterop.JumpList` (and Core when using `ProcessAppIdentity`), then rebuild. A Core-only reference no longer supplies JumpList types; binary compatibility with existing compiled consumers is not guaranteed. No type forwarders are provided. Existing users may continue using the old Core release or old local package.
 
-Core and JumpList are versioned independently but currently share the number `0.2.0-preview.1`; Notifications is `0.1.0-preview.1`. All three are pre-releases.
+Core and JumpList are versioned independently but currently share the number `0.2.0-preview.2` in the source tree (published: `0.2.0-preview.1`); Notifications is `0.1.0-preview.1`. All three are pre-releases.
 
 ## Requirements
 
@@ -174,7 +174,15 @@ Licensing of these two DLLs (facts only, no legal conclusion): this repository s
 
 ## Project references and packages
 
-For development, reference `src/ShellInterop.JumpList/ShellInterop.JumpList.csproj`. It transitively references Core; applications directly using Core APIs may reference Core explicitly. The NuGet package IDs are `ShellInterop.Core`, `ShellInterop.JumpList` and `ShellInterop.Notifications`. Core and JumpList are versioned `0.2.0-preview.1` (JumpList's NuGet dependency is `ShellInterop.Core >= 0.2.0-preview.1`). `ShellInterop.Notifications` is an independent package at `0.1.0-preview.1` with its own package README and the LICENSE packed. All three were published on NuGet.org as preview releases on 2026-11-15 ([Core](https://www.nuget.org/packages/ShellInterop.Core/0.2.0-preview.1), [JumpList](https://www.nuget.org/packages/ShellInterop.JumpList/0.2.0-preview.1), [Notifications](https://www.nuget.org/packages/ShellInterop.Notifications/0.1.0-preview.1)); a restore from the official feed and a minimal consumer Release build succeeded (SHELL-NUGET-05). Before that they were packed locally in isolation (SHELL-PACK-01/02). Publishing a package is not a legal clearance, and is separate from distributing an application that uses it (see the licensing notes above).
+For development, reference `src/ShellInterop.JumpList/ShellInterop.JumpList.csproj`. It transitively references Core; applications directly using Core APIs may reference Core explicitly. The NuGet package IDs are `ShellInterop.Core`, `ShellInterop.JumpList` and `ShellInterop.Notifications`. The published Core and JumpList versions are `0.2.0-preview.1`; the source tree is prepared as `0.2.0-preview.2` (not yet published; JumpList's NuGet dependency becomes `ShellInterop.Core >= 0.2.0-preview.2`, a minimum version, not an exact pin). `ShellInterop.Notifications` is an independent package at `0.1.0-preview.1` with its own package README and the LICENSE packed. All three were published on NuGet.org as preview releases on 2026-11-15 ([Core](https://www.nuget.org/packages/ShellInterop.Core/0.2.0-preview.1), [JumpList](https://www.nuget.org/packages/ShellInterop.JumpList/0.2.0-preview.1), [Notifications](https://www.nuget.org/packages/ShellInterop.Notifications/0.1.0-preview.1)); a restore from the official feed and a minimal consumer Release build succeeded (SHELL-NUGET-05). Before that they were packed locally in isolation (SHELL-PACK-01/02). Publishing a package is not a legal clearance, and is separate from distributing an application that uses it (see the licensing notes above).
+
+### Packing selected packages
+
+`pwsh scripts/Pack-Release.ps1 -OutputDirectory <empty dir> [-Package Core,JumpList,Notifications]` packs only the selected packages (default: all three; order and duplicates do not matter, each is packed once). Examples: `-Package JumpList`, `-Package Core,JumpList`, `-Package Notifications`. The output directory must be empty and is never cleaned. After packing, the script checks that the produced PackageIds and versions equal the selection and the csproj versions, then runs the mandatory PDB path gate (`scripts/Test-PackagePdbPaths.ps1`) for every selected package's DLL; there is no option to skip it, and a gate failure makes the script exit non-zero. Packing JumpList also builds Core, but no Core `.nupkg` is produced unless Core is selected. Packages produced only to test the script are not release candidates.
+
+### Changes prepared for JumpList `0.2.0-preview.2` (not yet published)
+
+BeginList slot-aware planning (`ApplyPlannedAsync`, `JumpListPlanner`, `JumpListPlanContext.BeginListSlots`, phases `Initial` / `PrivacyFallbackRetry`, `PlanFailed` / `PlanGeneration`), `AutoSeparateTasksFallback` (default `true`) with `WithAutoSeparateTasksFallback(false)` (explicit separators are always kept), and removal of the same-command rejection for fallback tasks. See [the package README](docs/JUMPLIST-PACKAGE-README.md#changes-in-020-preview2). `BeginListSlots` does not guarantee how many items Explorer displays; the planner runs synchronously on the dedicated STA worker; the planner is called again after a re-BeginList. `ApplyAsync` is kept and the published `JumpListApplyStatus` integer values are unchanged (`PlanFailed` = 14), but `IJumpListPublisher` gained `ApplyPlannedAsync`, which can affect external implementations and mocks; complete backward compatibility is not promised. Core `0.2.0-preview.2` has no API change (PDB path normalization only).
 
 ## Verification status
 
@@ -273,6 +281,6 @@ are redistributed, and none of this is legal advice or a clearance.
 
 - Custom categories may have a separately editable display name, initially copied from the group name, with an explicit copy-from-group action; renaming the group does not overwrite it.
 
-Packing the JumpList project with the old `0.1.0-preview.1` version remains blocked by a guard (the old Core lacks the split internals); the current `0.2.0-preview.1` of both projects packs. For local tests of other versions, pass the same `-p:Version=...` to both projects and do not publish it.
+Packing the JumpList project with the old `0.1.0-preview.1` version remains blocked by a guard (the old Core lacks the split internals); the current `0.2.0-preview.2` of both projects packs. For local tests of other versions, pass the same `-p:Version=...` to both projects and do not publish it.
 
 `JumpListEntry` is an API input model, not a persistence format; persist application data separately and reconstruct entries with the factories.

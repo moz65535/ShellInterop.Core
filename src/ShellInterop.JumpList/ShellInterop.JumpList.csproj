@@ -7,7 +7,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DeterministicSourcePaths>true</DeterministicSourcePaths>
     <PackageId>ShellInterop.JumpList</PackageId>
-    <Version>0.2.0-preview.1</Version>
+    <Version>0.2.0-preview.2</Version>
     <Authors>moz</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Windows Jump List Tasks publisher and Shell COM interop. Pre-release; not a Microsoft product.</Description>

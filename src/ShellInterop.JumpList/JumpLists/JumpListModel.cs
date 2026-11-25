@@ -259,36 +259,37 @@ public enum JumpListFallbackReason { None, PrivacyAccessDenied }
 
 public enum JumpListApplyStatus
 {
-    Success,
-    ValidationFailed,
+    Success = 0,
+    ValidationFailed = 1,
     /// <summary>CoCreate / SetAppID / BeginList failed. No update session exists, nothing to abort.</summary>
-    BeginFailed,
-    TaskCreationFailed,
-    AddTasksFailed,
+    BeginFailed = 2,
+    TaskCreationFailed = 3,
+    AddTasksFailed = 4,
     /// <summary>CommitList returned a failure. The Shell state is reported as Unknown; AbortList is deliberately not used.</summary>
-    CommitFailed,
+    CommitFailed = 5,
     /// <summary>A pre-commit failure occurred and AbortList itself failed.</summary>
-    AbortFailed,
-
-    /// <summary>The caller's <see cref="JumpListPlanner"/> threw, returned null, or returned an unusable definition. AbortList was called and nothing was committed.</summary>
-    PlanFailed,
-    DeleteFailed,
+    AbortFailed = 6,
+    DeleteFailed = 7,
     /// <summary>An unexpected exception left the outcome indeterminate.</summary>
-    UnknownState,
-    Cancelled,
-    PublisherDisposed,
+    UnknownState = 8,
+    Cancelled = 9,
+    PublisherDisposed = 10,
 
     /// <summary>
     /// NOT a failure and NOT committed: new user removals were detected and AbortList was called. The caller must persist
     /// the returned Matched keys, add them to ExcludedDestinationKeys and Apply again.
     /// </summary>
-    RemovedDestinationsPending,
+    RemovedDestinationsPending = 11,
 
     /// <summary>The removed list could not be identified safely (unreadable or ambiguous item, or it could not be read). Nothing was committed.</summary>
-    RemovedDestinationUnidentifiable,
+    RemovedDestinationUnidentifiable = 12,
 
     /// <summary>AppendCategory failed with an HRESULT other than E_ACCESSDENIED; AbortList was called and nothing was committed.</summary>
-    CategoryAppendFailed,
+    CategoryAppendFailed = 13,
+
+    // Values above are the published 0.2.0-preview.1 numbering and are fixed explicitly; new members are appended only.
+    /// <summary>The caller's <see cref="JumpListPlanner"/> threw, returned null, or returned an unusable definition. AbortList was called and nothing was committed.</summary>
+    PlanFailed = 14,
 }
 
 public enum JumpListFailurePhase

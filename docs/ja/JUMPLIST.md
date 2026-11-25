@@ -4,7 +4,7 @@
 この文書は同じ内容を日本語で読めるようにしたもので、新しい仕様や保証を加えるものではありません。食い違いがあれば、英語版・ソース・README の Verification status を確認してください。
 基本的な使い方（Avalonia のサンプル、終了処理）は [../USAGE-AVALONIA.md](../USAGE-AVALONIA.md) にあります。
 
-`ShellInterop.JumpList` は Windows 専用（`net10.0-windows`）のジャンプリスト公開ライブラリで、`ShellInterop.Core` に依存します。分割版（0.2.0-preview.1）は 2026-11-15 に NuGet.org で公開済みです。古い Core 0.1.0-preview.1 は NuGet.org では公開しておらず、置き換えて使ってはいけません。名前空間は `ShellInterop.Core.JumpLists` のままですが、バイナリ互換は保証しません。
+`ShellInterop.JumpList` は Windows 専用（`net10.0-windows`）のジャンプリスト公開ライブラリで、`ShellInterop.Core` に依存します。分割版（0.2.0-preview.1）は 2026-11-15 に NuGet.org で公開済みです。0.2.0-preview.2 は準備中で未公開です（`ShellInterop.Core` の最小バージョン `0.2.0-preview.2` に依存する予定）。古い Core 0.1.0-preview.1 は NuGet.org では公開しておらず、置き換えて使ってはいけません。名前空間は `ShellInterop.Core.JumpLists` のままですが、バイナリ互換は保証しません。
 
 ## 1. できること・できないこと
 
@@ -58,6 +58,31 @@ await publisher.ApplyAsync(definition);
 結果のフィールド: `EffectiveDisplayMode`（成功時のみ設定。`TasksOnly`、`CategoryAndTasks`、`CategoryEmpty`、`TasksFallback`、`CategorySkipped`）、`FallbackReason`、`RemovedDestinations`。これらは COM の結果を表すもので、Explorer が何を表示しているかではありません。
 
 `JumpListEntry` は API の入力モデルで、永続化用の形式ではありません。アプリのデータは別に保存し、ファクトリで再構築してください。
+
+## 0.2.0-preview.2 での変更（準備中・未公開）
+
+公開済みの 0.2.0-preview.1 との差分:
+
+- **BeginList スロット対応の計画。** `ApplyPlannedAsync` と `JumpListPlanner` / `JumpListPlanContext`（`BeginListSlots`、`Phase`: `Initial` / `PrivacyFallbackRetry`）。planner が例外を投げた、null や使えない定義を返した場合は何もコミットせず `JumpListApplyStatus.PlanFailed`（失敗フェーズ `JumpListFailurePhase.PlanGeneration`）になります。
+- **フォールバック用の自動セパレーターの制御。** `JumpListDefinition.AutoSeparateTasksFallback`（既定 `true`）と `WithAutoSeparateTasksFallback(bool)`。`false` にすると、固定 Tasks と `TasksFallback` ブロックの間、およびフォールバックブロック間にライブラリが自動で入れる区切り線をなくします。`Entries` やフォールバックリストに呼び出し側が明示した区切り線は、常に維持されます。
+- **フォールバックタスクの同一コマンド重複拒否の撤去。** 通常の Task や別のフォールバックタスクとパス・引数が同じ `TasksFallback` タスクは、0.2.0-preview.1 では検証エラー（`Fallback.Invalid`）でしたが、許容されます。検証を通ることと、Explorer で同一コマンドがどう表示されるかは別で、実際の表示は保証されません。
+- **リリースビルドのパス正規化。** DLL の CodeView の PDB パスにローカル絶対パスが含まれなくなります（リポジトリの `scripts/Pack-Release.ps1`）。
+
+注意事項:
+
+- `BeginListSlots` は Shell が `BeginList` で返す値で、Explorer の実際の表示件数を保証しません。
+- planner は COM セッションが開いている間、専用 STA 上で同期実行されます。軽く保ち、同じ publisher を呼ばないでください。
+- 再度 BeginList が呼ばれた場合（プライバシー設定によるフォールバック再試行）、planner も再度呼ばれ、新しいセッションの情報で再計画します。
+- `AutoSeparateTasksFallback` の既定値は `true` です。`false` でも明示した区切り線は維持されます。
+
+### 互換性（0.2.0-preview.1 から 0.2.0-preview.2）
+
+プレビュー版であり、完全な後方互換性は保証しません。
+
+- `ApplyAsync` は維持され、利用契約も変わりません。
+- 公開済みの `JumpListApplyStatus` の整数値は明示的に固定され、変更されません。`PlanFailed` は新しい値（14）で末尾に追加されます。`JumpListFailurePhase.PlanGeneration` も既存メンバーの後に追加されます。
+- `IJumpListPublisher` に `ApplyPlannedAsync` が追加されました。外部の実装やテスト用モックは再実装が必要で、0.2.0-preview.1 向けにコンパイルしてこのインターフェースを実装しているバイナリは再ビルドが必要です。互換用のインターフェースや既定実装は提供しません。
+- 以前は拒否されていたフォールバックの同一コマンドが許容されます。
 
 ## 4. アイコン指定（SetIconLocation）
 

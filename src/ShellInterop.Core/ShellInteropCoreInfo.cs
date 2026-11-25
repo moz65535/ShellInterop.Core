@@ -6,7 +6,7 @@ namespace ShellInterop.Core;
 public static class ShellInteropCoreInfo
 {
     /// <summary>
-    /// Gets the informational version of the ShellInterop.Core assembly (for example <c>0.2.0-preview.1</c>),
+    /// Gets the informational version of the ShellInterop.Core assembly (for example <c>0.2.0-preview.2</c>),
     /// without any <c>+</c> build metadata suffix.
     /// </summary>
     /// <value>The version string, or <c>"0.0.0"</c> if the assembly has no informational version attribute.</value>
