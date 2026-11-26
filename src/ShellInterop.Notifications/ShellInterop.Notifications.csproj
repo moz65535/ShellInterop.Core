@@ -10,7 +10,7 @@
     <DeterministicSourcePaths>true</DeterministicSourcePaths>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>ShellInterop.Notifications</PackageId>
-    <Version>0.1.0-preview.1</Version>
+    <Version>0.1.0-preview.2</Version>
     <Authors>moz</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>Windows Toast sender (Windows SDK .NET projection, no Windows App SDK) with read-only AUMID shortcut inspection. Pre-release; not a Microsoft product.</Description>
