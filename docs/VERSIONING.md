@@ -33,12 +33,7 @@ These three versions are published on NuGet.org as preview releases. A published
 |---|---|---|---|---|
 | `ShellInterop.Core` | `0.2.0-preview.2` | [link](https://www.nuget.org/packages/ShellInterop.Core/0.2.0-preview.2) | [`core/v0.2.0-preview.2`](https://github.com/moz65535/ShellInterop.Core/releases/tag/core/v0.2.0-preview.2) | PDB/CodeView local absolute path removed (no API or feature change) |
 | `ShellInterop.JumpList` | `0.2.0-preview.2` | [link](https://www.nuget.org/packages/ShellInterop.JumpList/0.2.0-preview.2) | [`jumplist/v0.2.0-preview.2`](https://github.com/moz65535/ShellInterop.Core/releases/tag/jumplist/v0.2.0-preview.2) | New features, enum/compatibility fixes, PDB path fix |
-
-## Planned next versions (not yet published)
-
-| Package | Current published | Next planned | Reason |
-|---|---|---|---|
-| `ShellInterop.Notifications` | `0.1.0-preview.1` | `0.1.0-preview.2` | PDB/CodeView local absolute path removed (no API, dependency or feature change); independent release |
+| `ShellInterop.Notifications` | `0.1.0-preview.2` | [link](https://www.nuget.org/packages/ShellInterop.Notifications/0.1.0-preview.2) | [`notifications/v0.1.0-preview.2`](https://github.com/moz65535/ShellInterop.Core/releases/tag/notifications/v0.1.0-preview.2) | PDB/CodeView local absolute path removed (no API, dependency or feature change); independent release |
 
 Published versions are never re-packed or replaced. Packages built for local verification (for example by `scripts/Pack-Release.ps1`) are distinct from the packages chosen for publication; a verification pack is never a replacement candidate for an already published version. Use `-Package` to pack only what is being released; the PDB gate always runs for the selected packages.
 
@@ -51,6 +46,7 @@ Each published package version gets its own annotated Git tag, named `<package-s
 - `notifications/v0.1.0-preview.1`
 - `core/v0.2.0-preview.2`
 - `jumplist/v0.2.0-preview.2`
+- `notifications/v0.1.0-preview.2`
 
 A GitHub Release is created per updated package, pointing at that package's tag. Preview versions are marked as Prerelease. NuGet.org is the distribution channel for packages, so `.nupkg` files are not attached to GitHub Releases. Packages that did not change get no new tag or Release.
 
